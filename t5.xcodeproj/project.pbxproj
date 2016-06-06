@@ -20,6 +20,7 @@
 		ADBC0F7C1D061CE800D251A4 /* SwiftyJSON.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_SwiftyJSON" /* SwiftyJSON.dylib */; };
 		ADBC0F7D1D061CE800D251A4 /* KituraNet.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_KituraNet" /* KituraNet.dylib */; };
 		ADBC0F7E1D061CE800D251A4 /* LoggerAPI.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_LoggerAPI" /* LoggerAPI.dylib */; };
+		ADBC0F891D06238200D251A4 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = ADBC0F881D06238200D251A4 /* README.md */; };
 		_LinkFileRef_CHttpParser /* CHttpParser.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_CHttpParser" /* CHttpParser.dylib */; };
 		_LinkFileRef_HeliumLogger /* HeliumLogger.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_HeliumLogger" /* HeliumLogger.dylib */; };
 		_LinkFileRef_Kitura /* Kitura.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = "_____Product_Kitura" /* Kitura.dylib */; };
@@ -174,6 +175,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		ADBC0F881D06238200D251A4 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		__PBXFileRef_Package.swift /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/CHttpParser-0.1.1/Sources/CHttpParser/http_parser.c" /* http_parser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = http_parser.c; sourceTree = "<group>"; };
 		"__PBXFileRef_Packages/CHttpParser-0.1.1/Sources/CHttpParser/utils.c" /* utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
@@ -379,6 +381,7 @@
 		"___RootGroup_" = {
 			isa = PBXGroup;
 			children = (
+				ADBC0F881D06238200D251A4 /* README.md */,
 				__PBXFileRef_Package.swift /* Package.swift */,
 				"_____Configs_" /* Configs */,
 				"_____Sources_" /* Sources */,
@@ -922,6 +925,7 @@
 				__src_cc_ref_Sources/IGPipelineMainOps.swift /* IGPipelineMainOps.swift in Sources */,
 				__src_cc_ref_Sources/IGPipelineUpdateOps.swift /* IGPipelineUpdateOps.swift in Sources */,
 				__src_cc_ref_Sources/Instagram.swift /* Instagram.swift in Sources */,
+				ADBC0F891D06238200D251A4 /* README.md in Sources */,
 				__src_cc_ref_Sources/InstagramCredentials.swift /* InstagramCredentials.swift in Sources */,
 				__src_cc_ref_Sources/main.swift /* main.swift in Sources */,
 				__src_cc_ref_Sources/Matrix.swift /* Matrix.swift in Sources */,
