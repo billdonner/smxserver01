@@ -67,7 +67,7 @@ class Sm {
     }
     let started = "\(NSDate())"
     let baseURLString = "https://api.instagram.com"
-    var packagename = "t4"
+    var packagename = "t5"
     var servertag = "-unassigned-"
     var ci : InstagramCredentials!
     var workers = Workers()
