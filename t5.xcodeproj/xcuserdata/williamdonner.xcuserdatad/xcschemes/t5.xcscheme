@@ -75,7 +75,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "Xcoderig-TESTING-ONLY"
+            argument = "socialmaxx.sytes.net"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
