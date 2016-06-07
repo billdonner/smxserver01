@@ -108,6 +108,7 @@ public class InstagramCredentials {
                                                 
                                                     let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
                                                 do {
+                                                Log.info("redirect back to client with \(tk)")
                                                 try response.redirect(tk)
                                                 }
                                                 catch {
