@@ -105,7 +105,14 @@ public class InstagramCredentials {
                                                 w.make_worker_for(id:userid,token:token)
                                                // w.start(userid,request,response)
                                                // see if we can go somewhere interesting
-                                                try response.redirect("/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)")
+                                                
+                                                    let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
+                                                do {
+                                                try response.redirect(tk)
+                                                }
+                                                catch {
+                                                     Log.error("Could not redirect to \(tk)")
+                                                }
                                             }
                                             catch  {
                                                 Log.error("Could not save membership")
