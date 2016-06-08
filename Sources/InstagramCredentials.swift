@@ -66,7 +66,7 @@ public class InstagramCredentials {
         func inner_two(code:String ) {
             
             let cburl = self.callbackUrl + "&nonce=112332123"
-            Log.info("STEP_TWO starting with \(     code) just received from Instagram")
+            Log.error("STEP_TWO starting with \(     code) just received from Instagram")
             IGOps.perform_post_request(url_to_request: "https://api.instagram.com/oauth/access_token",
                                        paramString: "client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)",completion:
             { status, body  in
@@ -108,7 +108,7 @@ public class InstagramCredentials {
                                                 
                                                     let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
                                                 do {
-                                                Log.info("redirect back to client with \(tk)")
+                                                Log.info("STEP_TWO redirect back to client with \(tk)")
                                                 try response.redirect(tk)
                                                 }
                                                 catch {

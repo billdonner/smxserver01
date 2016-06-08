@@ -110,13 +110,22 @@ class Sm {
     }
 }
 func startup_banner() {
+    
+    
+    /// get plist variables, server tag must be known
+    
+    let dict = NSDictionary(contentsOfFile:  ModelData.staticPath() + "/Info.plist")
+
+    
     let apiurl = "https://api.ipify.org?format=json"
     IGOps.perform_get_request(url_to_request: apiurl) { status,body  in
         if status == 200 {
             let jsonBody = JSON(data: body!)
             let ip = jsonBody["ip"].string
             Sm.axx.ip = ip!
-            Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) **********************")
+            let t =  dict?["version"] ?? "vv??"
+            
+            Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) \(t!) **********************")
             Log.info("** \(NSDate()) on \(Sm.axx.packagename) \(Sm.axx.ip):\( Sm.axx.portno) serving \( Sm.axx.modes.joined(separator: ","))")
             Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) **********************")
         }
@@ -151,6 +160,7 @@ Sm.axx.portno  =  Int(arguments[2]) ?? 8090
 Sm.axx.modes =  arguments[3].components(separatedBy: ",")
 Sm.axx.setServer(servertag: arguments[1])
 Sm.axx.title =  arguments[4]
+
 
 ///
 /// Set up a simple Logger
