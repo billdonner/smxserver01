@@ -206,8 +206,8 @@ public class Membership {
         if  !NSKeyedArchiver.archiveRootObject(dict, toFile:spec ){
             throw SMaxxError.CantWriteMembership(message: spec )
         } else {
-            let _  =   "\(Int(NSDate().timeIntervalSince(start)*1000.0))ms"
-            // Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
+            let elapsed  =   "\(Int(NSDate().timeIntervalSince(start)*1000.0))ms"
+             Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
         }
     }
 

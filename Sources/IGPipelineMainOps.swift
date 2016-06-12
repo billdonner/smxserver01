@@ -90,15 +90,102 @@ class UserCredentialsHandler: NsHandlerOp {
 class AllMediaPostsOp: NsOp {
     override func  codeWithApiRequestsInBackground() throws  {
         var posts : [IGMediaBlock] = []
-        try
-            IGOps.getmediaPosts (igp.targetID, minid: self.igp.pd.ouMinMediaPostID, each: { onePost in
-                posts.append(onePost) // accumulate min and max here
-                if let postid = onePost["id"] as? String  {
-                    self.igp.pd.ouMinMediaPostID = postid
-                    if  self.igp.pd.ouMaxMediaPostID == ""
-                    {  self.igp.pd.ouMaxMediaPostID = postid
-                    }
+        func isuniq(post:IGMediaBlock) -> Boolean {
+            /// AWFUL SLOW
+            let t =  post["id"] as? String
+            for apost in self.igp.pd.ouMediaPosts {
+                if apost.id  == t
+                {
+                    
+                    print("Duplicate First Up  Media Posts Op \(post["id"])")
+                    return false
                 }
+            }
+            return true
+        }
+        /// on a brand new user we just ask generally
+        try
+            IGOps.getmediaPosts (igp.targetID,  each: { onePost in
+                if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
+              self.handleMediaPostMinMax(post: onePost)
+                }
+            } ) { errcode in
+                guard  errcode == 200 else  {
+                    return self.bail(errcode,"- \(self)  api bail getmediaPosts")
+                    
+                } // end 1  guard
+                // park the full vector upstairs
+                
+                self.igp.rawPosts =  posts
+                // announce count
+                print (" --- got \(self.igp.rawPosts.count) in first batch of posts ")
+                return self.onward( AllMediaPostsHandler())
+        }
+    }
+}
+// MARK: - Step 005A - OldMediaPostsOp - asks for posts below the current min
+class OldMediaPostsOp: NsOp {
+    override func  codeWithApiRequestsInBackground() throws  {
+        var posts : [IGMediaBlock] = []
+        func isuniq(post:IGMediaBlock) -> Boolean {
+            /// AWFUL SLOW
+            let t =  post["id"] as? String
+            for apost in self.igp.pd.ouMediaPosts {
+                if apost.id  == t
+                {
+                    
+                    print("Duplicate Old Media Posts Op \(post["id"])")
+                    return false
+                }
+            }
+            return true
+        }
+        print("Getting Old Media Posts")
+        let maxt =  self.igp.pd.ouMinMediaPostID // ask for things below this id
+        try
+            IGOps.getmediaPostsBelowMax (igp.targetID, maxid: maxt , each: { onePost in
+                if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
+                self.handleMediaPostMinMax(post: onePost)
+                }
+           
+            } ) { errcode in
+                guard  errcode == 200 else  {
+                    return self.bail(errcode,"- \(self)  api bail getmediaPosts")
+                    
+                } // end 1  guard
+                // park the full vector upstairs
+                
+                self.igp.rawPosts =  posts
+                // announce count
+                print (" --- got \(self.igp.rawPosts.count) old posts ")
+                return self.onward( AllMediaPostsHandler())
+        }
+    }
+}
+// MARK: - Step 005B - NewMediaPostsOp - asks for posts above the current max
+class NewMediaPostsOp: NsOp {
+    override func  codeWithApiRequestsInBackground() throws  {
+        var posts : [IGMediaBlock] = []
+        func isuniq(post:IGMediaBlock) -> Boolean {
+            /// AWFUL SLOW
+            let t =  post["id"] as? String
+            for apost in self.igp.pd.ouMediaPosts {
+                if apost.id  == t
+                {
+                    print("Duplicate New Media Posts Op \(post["id"])")
+                    return false
+                }
+            }
+            return true
+        }
+        print("Getting New Media Posts")
+        let maxt =  self.igp.pd.ouMaxMediaPostID // ask for things below this id
+        try
+            IGOps.getmediaPostsAboveMin (igp.targetID, minid: maxt , each: { onePost in
+                 if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
+                self.handleMediaPostMinMax(post: onePost)
+                }
+                
             } ) { errcode in
                 guard  errcode == 200 else  {
                     return self.bail(errcode,"- \(self)  api bail getmediaPosts")
@@ -113,7 +200,6 @@ class AllMediaPostsOp: NsOp {
         }
     }
 }
-
 // MARK: - Step 006 - AllMediaPostsHandler
 class AllMediaPostsHandler: NsHandlerOp {
     override func codeHandlingApiResponses () {
@@ -238,7 +324,6 @@ class OneMediaPostCommentsOp: NsOp {
 // MARK: - Step 010 - OneMediaPostCommentsHandler
 class OneMediaPostCommentsHandler: NsHandlerOp {
     override func codeHandlingApiResponses () {
-        // BackOp.aprint("run OneMediaPostCommentsHandler here in the background  \(opname)"
         
         let nextOp = OneMediaPostLikesOp()
         nextOp.mediaBlock = self.igp.rawPosts[self.igp.rawPostIndex]

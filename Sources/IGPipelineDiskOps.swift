@@ -28,24 +28,28 @@ import Foundation
  */
 
 // MARK: - Step 000 - Disk Startup
-class DiskStartupOp: NsOp {
-    // presumably we've already go it in self.igp so just run all the UI callbacks here
-    override func codeWithApiRequestsInBackground() throws {
-        
-        delegate?.didProcessRelationshipStatus(self.igp,loggedInUser:true)
-        if let _  = self.igp.pd.ouUserInfo {
-            delegate?.didProcessUserInfo ( self.igp )
-            delegate?.didProcessAllFollowers(self.igp)
-            delegate?.didProcessAllPosts(self.igp)
-            
-            if  let nextOp = self.finalWrapUpOp {
-                nextOp.needsSaving = false
-                onward(nextOp)
-                return
-            }
-        }
-        
-        fatalError("**could not reload from disk for id " + self.igp.pd.ouUserInfo.id)
-    }
-}
+//class DiskStartupOp: NsOp {
+//    // presumably we've already go it in self.igp so just run all the UI callbacks here
+//    override func codeWithApiRequestsInBackground() throws {
+//        
+//        delegate?.didProcessRelationshipStatus(self.igp,loggedInUser:true)
+//        if let _  = self.igp.pd.ouUserInfo {
+//            delegate?.didProcessUserInfo ( self.igp )
+//            delegate?.didProcessAllFollowers(self.igp)
+//            delegate?.didProcessAllPosts(self.igp)
+//         
+//            }
+// 
+//    
+//    if  let nextOp = self.finalWrapUpOp {
+//        nextOp.needsSaving = false
+//        onward(nextOp)
+//        return
+//    }
+//        
+//      onward(UpdatePipelineStartupOp())
+//    
+//       // fatalError("**could not reload from disk for id " + self.igp.pd.ouUserInfo.id)
+//    }
+//}
 

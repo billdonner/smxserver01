@@ -43,13 +43,13 @@ public class InstagramCredentials {
     /// redirect back from IG from the unwindor path
     public  func STEP_THREE (request: RouterRequest, response: RouterResponse) {
         
-        Log.error("STEP_THREE   \( request.queryParams)")
+        //Log.error("STEP_THREE   \( request.queryParams)")
     }
 
     public func STEP_ONE(response: RouterResponse) {
         let cburl = self.callbackUrl + "&nonce=112332123"
         let loc = "https://api.instagram.com/oauth/authorize/?client_id=\(clientId)&redirect_uri=\(cburl)&response_type=code&scope=basic+likes+comments+relationships+follower_list"
-        Log.error("STEP_ONE redirecting to Instagram authorization \(loc)")
+        //Log.error("STEP_ONE redirecting to Instagram authorization \(loc)")
         // Log in
         do {
             try response.redirect( loc)
@@ -66,7 +66,7 @@ public class InstagramCredentials {
         func inner_two(code:String ) {
             
             let cburl = self.callbackUrl + "&nonce=112332123"
-            Log.error("STEP_TWO starting with \(     code) just received from Instagram")
+          //  Log.error("STEP_TWO starting with \(     code) just received from Instagram")
             IGOps.perform_post_request(url_to_request: "https://api.instagram.com/oauth/access_token",
                                        paramString: "client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)",completion:
             { status, body  in
@@ -76,7 +76,7 @@ public class InstagramCredentials {
                                             let userid = jsonBody["user"]["id"].string,
                                             let pic = jsonBody["user"]["profile_picture"].string,
                                             let title = jsonBody["user"]["username"].string {
-                                            Log.info("STEP_TWO Instagram sent back \(token) and \(title)")
+                                         //   Log.info("STEP_TWO Instagram sent back \(token) and \(title)")
                                             /// stash these, creating new object if needed
                                             do {
                                                 let smtoken = "\((userid + token).hashValue)"
@@ -108,7 +108,7 @@ public class InstagramCredentials {
                                                 
                                                     let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
                                                 do {
-                                                Log.info("STEP_TWO redirect back to client with \(tk)")
+                                              //  Log.info("STEP_TWO redirect back to client with \(tk)")
                                                 try response.redirect(tk)
                                                 }
                                                 catch {
@@ -138,8 +138,8 @@ public class InstagramCredentials {
             Log.error("Instagram error \(error) and \(error_reason) - \(error_description)")
         } else
             if let code = request.queryParams["code"] {
-                if let nonce = request.queryParams["nonce"] {
-                print("got nonce \(nonce) ")
+                if let _ = request.queryParams["nonce"] {
+               // print("got nonce \(nonce) ")
                 }
                 inner_two(code:code)
         }

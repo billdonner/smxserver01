@@ -126,7 +126,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             
             var rqst : JSONDictionary = ["error":"inconsistency"]
             
-            let data = ReportMaker.report(id:id,token:mtoken,reportname:reportname,limit:limit,skip:skip)
+            let data = ReportMaker.generate_and_send_report(id:id,token:mtoken,reportname:reportname,limit:limit,skip:skip)
             
             // echo the request
             if let (gkind,_) =  ReportMaker.reportfuncs[reportname]{
@@ -206,11 +206,18 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
     
     
     // MARK:- Read context for id and dispatch to specific report builders
-  private  class func report (id:String,token:String, reportname:String,limit:Int, skip:Int ) -> JSONDictionary {
+    private  class func generate_and_send_report (id:String,token:String, reportname:String,limit:Int, skip:Int, bypasscache:Bool = false ) -> JSONDictionary {
         let firstmem: UInt = report_memory()
         let start = NSDate()
         let path = ModelData.membershipPath() + id + ".smaxx"
         var pdx: PersonData!
+        if bypasscache == true {
+            if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
+                Log.error(" Report:\(reportname) found user \(id) on disk with forced bypass ")
+                ThePdCache[path] = pdxxx // add this to the cache
+                pdx = pdxxx
+            }
+        } else {
         // try for cache lookup
         let fpdx = ThePdCache[path]
         if fpdx != nil {
@@ -223,26 +230,24 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
                 pdx = pdxx
             }
         }
+        } // forced bypass
         
         if pdx != nil {
             
             // setup context for report
-            
-            
-            let ou = SocialDataProcessor(id:id,token:token) // wtf?
-            ou.pd = pdx
-            
-            
+       let sdp = SocialDataProcessor(id:id,token:token) // wtf?
+            sdp.pd = pdx
+        
             // first note loading time to return
             let loadtime  =   "\(Int(NSDate().timeIntervalSince(start)*1000.0))ms"
             if let ffff =  ReportMaker.reportfuncs[reportname]{
                 let (gkind,f) = ffff
                 // time how long it takes to produce this report
                 let restart = NSDate()
+                sdp.figureLikesAndComments() // compute intermediates!
                 
-                ou.figureLikesAndComments() // compute intermediates!
-                
-                let (totalcount,body,_) = f(igp: ou,skip:skip,limit:limit)
+                print (sdp.pd.postsStatus())
+                let (totalcount,body,_) = f(igp: sdp,skip:skip,limit:limit)
                
                 ///
                 // MARK:- The Report Name and Kind is Reflected Back To The Mobile App

@@ -35,82 +35,14 @@ private class IGBackgroundLoadingPipeline {
     private var callingVC: IGDataEngineDelegate?
     private var notifKey: String?
     private var finalWrapUpOp : FinalWrapUpOp?
+ 
     
-    //    func pipelineDidFinish(igp: OU) {
-    //
-    //        // write it all to disk, traverses down
-    //        do {
-    //            try igp.pd.savePd(igp.userID)
-    //            print ("did save context for \(igp.userID)")
-    //
-    //        } catch {
-    //            print("coldnt write ig Plist in pipelineDidFinish")
-    //        }
-    //    }
-    private func startLoadingPipeline(pipelineNamed named:String , notifKey:String? ,igp: SocialDataProcessor) -> (StartingPipelineOp?,FinalWrapUpOp? ){
-        // no concurrency for now, each pipeline is a single threaded sequence of api calls
-        self.notifKey = notifKey
-        // make this now and return it to caller
-        self.finalWrapUpOp = FinalWrapUpOp( )
-        if let finalWrapUpOp = self.finalWrapUpOp {
-            finalWrapUpOp.notificationNamed  = notifKey // setup name of NSNotification
-        } else {        return (nil, nil) }//throw
-        
-        // this should kick off the pipeline
-        let o1 = StartingPipelineOp( )
-        o1.igp = igp //amen
-        o1.finalWrapUpOp = finalWrapUpOp
-        // o1.delegate = self.callingVC
-        return (o1,self.finalWrapUpOp)
-        
-    }
-    private func startLoadingUpdatePipeline(pipelineNamed named:String , notifKey:String? ,igp: SocialDataProcessor) -> (NsOp?,FinalWrapUpOp? ){
-        // no concurrency for now, each pipeline is a single threaded sequence of api calls
-        self.notifKey = notifKey
-        // make this now and return it to caller
-        self.finalWrapUpOp = FinalWrapUpOp( )
-        if let finalWrapUpOp = self.finalWrapUpOp {
-            finalWrapUpOp.notificationNamed  = notifKey // setup name of NSNotification
-        } else {        return (nil, nil) }//throw
-        
-        // this should kick off the pipeline
-        let o1 = StartingUpdatePipelineOp( )
-        o1.igp = igp //amen
-        o1.finalWrapUpOp = finalWrapUpOp
-        // o1.delegate = self.callingVC
-        return (o1,self.finalWrapUpOp)
-        
-    }
-  private  func  loadupForUpdateBackgroundOperation( pipelineNamed:String , notifKey:String? , igp:SocialDataProcessor, delegate: IGDataEngineDelegate? ) -> (NsOp,FinalWrapUpOp) {
-        BackOp.aprint ("* starting update api pipeline for \(pipelineNamed)")
-        self.callingVC = delegate
-        let (start,final) = self.startLoadingUpdatePipeline(pipelineNamed:pipelineNamed, notifKey:notifKey ,igp:igp)
-        guard start != nil && final != nil else {
-            fatalError("bad pipeline start and finish")
-        }
-        if let first = start {
-            first.opname = pipelineNamed
-        }
-        return (start!,final!) // and return the ultimate final block
-    }
-   private func  loadupForBackgroundOperation( pipelineNamed:String , notifKey:String? , igp:SocialDataProcessor, delegate: IGDataEngineDelegate? ) -> (NsOp,FinalWrapUpOp) {
-        BackOp.aprint ("* starting background api pipeline for \(pipelineNamed)")
-        self.callingVC = delegate
-        let (start,final) = self.startLoadingPipeline(pipelineNamed:pipelineNamed, notifKey:notifKey ,igp:igp)
-        guard start != nil && final != nil else {
-            fatalError("bad pipeline start and finish")
-        }
-        if let first = start {
-            first.opname = pipelineNamed
-        }
-        return (start!,final!) // and return the ultimate final block
-    }
 }
 
-struct  IGDataEngine {
+public struct  IGDataEngine {
     // MARK: - Components that are UI free
     private var targetUserID: String
-      private var targetToken: String
+    private var targetToken: String
     private var igData:SocialDataProcessor
     private var delegate: IGDataEngineDelegate?
     private var notifKey  : String?
@@ -121,7 +53,7 @@ struct  IGDataEngine {
     
     init(forLoggedOnUser:String, targetToken:String, delegate:IGDataEngineDelegate?) {
         self.targetUserID = forLoggedOnUser
-         self.targetToken = targetToken
+        self.targetToken = targetToken
         self.igData = SocialDataProcessor(id:forLoggedOnUser,token:targetToken) // placeholder, better be overwritten in setuppipeline
         self.igBackgroundLoadingPipeline = IGBackgroundLoadingPipeline()
         self.delegate = delegate
@@ -143,34 +75,41 @@ struct  IGDataEngine {
             fatalError("-- YIKES error \(errcode) from fullStartup, please contact your vendor")
         }
     }
-    //MARK: - setupPipeline  is ONLY Externally Called Method
-    private mutating func start_pipeline_from_api(_ igp:SocialDataProcessor,targetID:String,notifKey:String?) -> (NsOp,FinalWrapUpOp) {
+    private       func  loadupForBackgroundOperation( pipelineNamed:String , notifKey:String? , igp:SocialDataProcessor, delegate: IGDataEngineDelegate? ) -> (NsOp,FinalWrapUpOp) {
         
-        print("* contacting Instagram for user \(targetID) data...")
-        self.targetUserID = targetID
-        return self.igBackgroundLoadingPipeline.loadupForBackgroundOperation(pipelineNamed: "mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
+        func startLoadingPipeline(pipelineNamed named:String , notifKey:String? ,igp: SocialDataProcessor) -> (StartingPipelineOp?,FinalWrapUpOp? ){
+            // no concurrency for now, each pipeline is a single threaded sequence of api calls
+            //self.notifKey = notifKey
+            // make this now and return it to caller
+            let finalWrapUpOp = FinalWrapUpOp( )
+            finalWrapUpOp.notificationNamed  = notifKey // setup name of NSNotification
+
+            // this should kick off the pipeline
+            let o1 = StartingPipelineOp( )
+            o1.opname = pipelineNamed
+            o1.igp = igp //amen
+            o1.finalWrapUpOp = finalWrapUpOp
+            o1.delegate = delegate
+            return (o1, finalWrapUpOp)
+            
+        }
+       NsOp.aprint ("* starting background api pipeline for \(pipelineNamed)")
+        //self.callingVC = delegate
+        let (start,final) = startLoadingPipeline(pipelineNamed: pipelineNamed, notifKey: notifKey, igp: igp)
+        guard start != nil && final != nil else {
+            fatalError("bad pipeline start and finish")
+        }
+        if let first = start {
+            first.opname = pipelineNamed
+        }
+        return (start!,final!) // and return the ultimate final block
     }
-    private mutating func start_pipeline_from_update_api(_ igp:SocialDataProcessor,targetID:String,notifKey:String?) -> (NsOp,FinalWrapUpOp) {
-        
-        print("* contacting Instagram for updating user \(targetID) data...")
-        self.targetUserID = targetID
-        return self.igBackgroundLoadingPipeline.loadupForUpdateBackgroundOperation(pipelineNamed: "mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
-    }
-    private mutating func start_pipeline_from_disk(_ igp:SocialDataProcessor,targetID:String,notifKey:String?) -> (NsOp,FinalWrapUpOp) {
-        self.targetUserID = targetID
-        //        if igp.pd.ouVersion != igp.pd.plistVersion {
-        //            print("* db version mismatch hence must reload")
-        //            return self.igBackgroundLoadingPipeline.loadupForBackgroundOperation(pipelineNamed: "mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
-        //        }
-        print("* pulling from disk for user \(targetID) schema version is \(igp.pd.ouVersion!) ... ")
-        self.targetUserID = targetID
-        return self.igBackgroundLoadingPipeline.loadupForBackgroundOperation(pipelineNamed:"diskpipe",notifKey: notifKey,  igp: igp, delegate: self.delegate)
-    }
-    func startPipeline(firstOp:NSOperation) {
+    
+     func startPipeline(firstOp:NSOperation) {
         //print("* starting Pipeline with  \(firstOp) added to operation Q")
         Sm.axx.operationQueue.addOperation(firstOp) // this kicks it off
     }
-    mutating func setupPipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
+    mutating public func setupPipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
         // load user data
         self.igData = igp
         self.startTime = NSDate()
@@ -181,29 +120,30 @@ struct  IGDataEngine {
             let pd = try  PersonData.restore(userID:self.targetUserID)
             // if restore fails we go down to the catch
             self.igData.pd = pd
-            // start pipeline after good restore from disk
+            self.targetUserID = self.igData.targetID            // start pipeline after good restore from disk
+            print("* pulling from disk for user \(self.targetUserID) schema version is \(igp.pd.ouVersion!) ... ")
+              l  = loadupForBackgroundOperation(pipelineNamed:"diskpipe",notifKey: notifKey,  igp: igp, delegate: self.delegate)
             
-            print("* did restore from disk for  user \(self.targetUserID) data...")
-            l  = start_pipeline_from_disk(self.igData,targetID: self.targetUserID,notifKey:notifKey)
+            
         }
         catch (_)  {
-             print("* did not restore from disk for  user \(self.targetUserID) data...")
             // start pipeline to interact with Instagram
-            l = start_pipeline_from_api(self.igData,targetID: self.targetUserID,notifKey:notifKey)
+            print("* could not restore from disk - contacting Instagram for new user \(self.targetUserID) data...")
+            l  =  loadupForBackgroundOperation(pipelineNamed: "mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
+            
         }// end of catch
         
         //
         return l
     }//pull sR
-    mutating func setupUpdatePipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
+    mutating public func setupUpdatePipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
         // load user data
         self.igData = igp
         self.startTime = NSDate()
         let l : (NsOp,FinalWrapUpOp)
         print("*** setupUpdatePipeline periodic update")
-        // start pipeline to interact with Instagram
-        l = start_pipeline_from_update_api(self.igData,targetID: self.targetUserID,notifKey:notifKey)
-        
+        // start pipeline to interact with Instagram  
+        l  =  loadupForBackgroundOperation(pipelineNamed: "updatepipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
         return l
     }//pull sR
 }

@@ -61,7 +61,7 @@ struct FreqCount {
 //MARK: - SocialDataProcessor ties together a SocialPerson with her persistent representation on disk and a processing pipeline that periodically updates the SocialPerson with regards to her social network(s)
 
 ///
-class  SocialDataProcessor {
+public class  SocialDataProcessor {
     
     var targetID: String // represents the  userID for this SocialDataProcessor
     var targetAccessToken: String // the Instagram Access Token gets copied into here
@@ -97,7 +97,7 @@ class  SocialDataProcessor {
         self.targetID = id
         self.targetAccessToken = token
     }
- 
+
     func figureLikesAndComments () { // used by many reports
         likersDict = Instagram.dictOfAvLikersArossBunchOfMedia(posts: pd.ouMediaPosts)
         commentersDict = Instagram.dictOfAvCommenteursArossBunchOfMedia(posts: pd.ouMediaPosts)

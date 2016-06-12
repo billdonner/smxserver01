@@ -49,10 +49,11 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
     var ouAllFollowers:BunchOfPeople = []
     var ouAllFollowing:BunchOfPeople = []
     
-    var ouMinMediaPostID: String = ""
-    var ouMaxMediaPostID: String = ""
+    var ouMinMediaPostID: String = "999999999999999999999999999999999999999999999999"
+    var ouMaxMediaPostID: String = "0"
     
-    
+    //1000083294764874892_275404302
+    //995772699961933304_275404302
     //computed but not saved to disk
     
     func summarize () -> String {
@@ -61,6 +62,12 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         return "* u:" + ouUserInfo.id + ":" + ouUserInfo.fullname  + "(" + ouUserInfo.username + ")" +
             " c:\(uc[0]),\(uc[1]),\(uc[2]) " +
             " r:" +  ouRelationshipToEndUser.incoming + "." +  ouRelationshipToEndUser.outgoing + " " +  currently()
+    }
+    
+    
+    func postsStatus()->String {
+        
+        return "\n*  p:\(ouMediaPosts.count) minid: \(ouMinMediaPostID) maxid: \(ouMaxMediaPostID)"
     }
     
     func currently()->String {

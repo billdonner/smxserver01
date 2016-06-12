@@ -96,15 +96,13 @@ struct IGOps {
     }
     
     static func getmediaPosts(_ targetID:String,
-                              minid:String,
                               each:BOMCompletionFunc,
                               completion:IntCompletionFunc)
         throws  -> IGOps.Router {
             // member must have access token for instagram api access
             let token = try get_token_for_member(targetID: targetID)
-            let request = minid == "" ?
-                IGOps.Router.MediaRecent (targetID,token) :
-                IGOps.Router.MediaRecentInRange(targetID,token,minid)
+            let request =
+                IGOps.Router.MediaRecent (targetID,token)
             print ("getting posts via --- \((request.URLRequest.url!))")
             try IGOps.paginatedCall(url:request.URLRequest.url!,
                                     each: each,
@@ -112,7 +110,56 @@ struct IGOps {
             return request
             
     }
-    
+    static func getmediaPostsInRange(_ targetID:String,
+                                     minid:String,
+                                     maxid:String,
+                                     each:BOMCompletionFunc,
+                                     completion:IntCompletionFunc)
+        throws  -> IGOps.Router {
+            // member must have access token for instagram api access
+            let token = try get_token_for_member(targetID: targetID)
+            let request =
+                IGOps.Router.MediaRecentInRange(targetID,token,minid,maxid)
+            print ("getting posts in range via --- \((request.URLRequest.url!))")
+            try IGOps.paginatedCall(url:request.URLRequest.url!,
+                                    each: each,
+                                    completion: completion)
+            return request
+            
+    }
+    static func getmediaPostsAboveMin(_ targetID:String,
+                                     minid:String,
+                                     each:BOMCompletionFunc,
+                                     completion:IntCompletionFunc)
+        throws  -> IGOps.Router {
+            // member must have access token for instagram api access
+            let token = try get_token_for_member(targetID: targetID)
+            let request =
+                IGOps.Router.MediaRecentAboveMin(targetID,token,minid )
+            print ("getmediaPostsAboveMin --- \((request.URLRequest.url!))")
+            try IGOps.paginatedCall(url:request.URLRequest.url!,
+                                    each: each,
+                                    completion: completion)
+            return request
+            
+    }
+    static func getmediaPostsBelowMax(_ targetID:String,
+                                      maxid:String,
+                                      each:BOMCompletionFunc,
+                                      completion:IntCompletionFunc)
+        throws  -> IGOps.Router {
+            // member must have access token for instagram api access
+            let token = try get_token_for_member(targetID: targetID)
+            let request =
+                IGOps.Router.MediaRecentBelowMax(targetID,token, maxid)
+            print ("getmediaPostsBelowMax --- \((request.URLRequest.url!))")
+            try IGOps.paginatedCall(url:request.URLRequest.url!,
+                                    each: each,
+                                    completion: completion)
+            return request
+            
+    }
+ 
     static func getAllFollowers(_ targetID:String,
                                 each:BOPCompletionFunc,
                                 completion:IntCompletionFunc)
@@ -362,7 +409,9 @@ extension IGOps { // networking
         case Relationship(String,String)
         case MediaRecent(String,String)
         
-        case MediaRecentInRange(String,String,String)//token,min_id
+        case MediaRecentAboveMin(String,String,String )//token,min_id,max_id
+        case MediaRecentBelowMax(String,String,String )//token,min_id,max_id
+        case MediaRecentInRange(String,String,String,String)//token,min_id,max_id
         
         case SelfMediaLiked(String,String)
         case SelfFollowing(String,String)
@@ -398,9 +447,17 @@ extension IGOps { // networking
                     let pathString = "/v1/users/" + userID + "/media/recent"
                     return (pathString, ["access_token": accessToken ])
                     
-                case .MediaRecentInRange (let userID, let accessToken, let minID ):
+                case .MediaRecentAboveMin (let userID, let accessToken, let minID  ):
                     let pathString = "/v1/users/" + userID + "/media/recent"
-                    return (pathString, ["access_token": accessToken,"min_id:":minID ])
+                    return (pathString, ["access_token": accessToken,"min_id":minID  ])
+                    
+                case .MediaRecentBelowMax (let userID, let accessToken, let maxID ):
+                    let pathString = "/v1/users/" + userID + "/media/recent"
+                    return (pathString, ["access_token": accessToken, "max_id":maxID  ])
+                    
+                case .MediaRecentInRange (let userID, let accessToken, let minID, let maxID ):
+                    let pathString = "/v1/users/" + userID + "/media/recent"
+                    return (pathString, ["access_token": accessToken,"min_id":minID,"max_id":maxID  ])
                     
                 case .SelfMediaLiked (  _, let accessToken):
                     let pathString = "/v1/users/self/media/liked"
