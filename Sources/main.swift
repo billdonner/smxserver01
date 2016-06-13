@@ -72,7 +72,7 @@ class Sm {
     var ci : InstagramCredentials!
     var workers = Workers()
     var portno = 8090
-    var version = "v1"
+    var version = "v0.465"
     var modes = ["reports","membership","workers"]
     var title = "SocialMaxx@UnspecifiedSite"
     var ip = "127.0.0.1"
