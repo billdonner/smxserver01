@@ -88,8 +88,8 @@ class Sm {
     func status () -> JSONDictionary  {
         
         let a : JSONDictionary  = [ "software-verision":version,
-                  "instagram-api-url":baseURLString,
-                  "smaxx-server-ip":ip,
+                                        "instagram-api-url":baseURLString,
+                                "smaxx-server-ip":ip,
                                  "packagename":packagename,
                                  "servertag":servertag,
                                  "portno":portno,

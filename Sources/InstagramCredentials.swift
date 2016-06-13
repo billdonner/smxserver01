@@ -38,10 +38,13 @@ public class InstagramCredentials {
         self.clientSecret = clientSecret
         self.callbackBase = callbackBase
         self.callbackUrl = self.callbackBase + "/authcallback?type=mobile"
-        self.callbackPostUrl = self.callbackBase + "/postcallback"
+            self.callbackPostUrl = self.callbackBase + "/postcallback"
+//       // self.callbackPostUrl = "http://" +
+ //Sm.axx.ip + ":\(Sm.axx.portno)"  + "/postcallback"
     }
     /// make subscripyion
     public func make_subscription (myVerifyToken:String) {
+        print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
         IGOps.perform_post_request(url_to_request: "https://api.instagram.com/v1/subscriptions/",
                                    paramString: "client_id=\(clientId)&client_secret=\(clientSecret)" +
                                     "&object=user&aspect=media&verify_token=\(myVerifyToken)&callback_url=\(self.callbackPostUrl)",completion:
