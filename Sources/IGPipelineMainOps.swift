@@ -97,7 +97,7 @@ class AllMediaPostsOp: NsOp {
                 if apost.id  == t
                 {
                     
-                    print("Duplicate First Up  Media Posts Op \(post["id"])")
+                    print("Duplicate First Up  Media Posts Op \(t!)")
                     return false
                 }
             }
@@ -134,7 +134,7 @@ class OldMediaPostsOp: NsOp {
                 if apost.id  == t
                 {
                     
-                    print("Duplicate Old Media Posts Op \(post["id"])")
+                    print("Duplicate Old Media Posts Op \(t!)")
                     return false
                 }
             }
@@ -158,7 +158,7 @@ class OldMediaPostsOp: NsOp {
                 self.igp.rawPosts =  posts
                 // announce count
                 print (" --- got \(self.igp.rawPosts.count) old posts ")
-                return self.onward( AllMediaPostsHandler())
+                return self.onward( NewMediaPostsOp()) // now get new posts
         }
     }
 }
@@ -172,7 +172,7 @@ class NewMediaPostsOp: NsOp {
             for apost in self.igp.pd.ouMediaPosts {
                 if apost.id  == t
                 {
-                    print("Duplicate New Media Posts Op \(post["id"])")
+                    print("Duplicate New Media Posts Op \(t!)")
                     return false
                 }
             }

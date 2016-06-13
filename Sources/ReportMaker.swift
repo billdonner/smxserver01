@@ -126,7 +126,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             
             var rqst : JSONDictionary = ["error":"inconsistency"]
             
-            let data = ReportMaker.generate_and_send_report(id:id,token:mtoken,reportname:reportname,limit:limit,skip:skip)
+            let data = ReportMaker.generate_and_send_report(id:id,token:mtoken,reportname:reportname,limit:limit,skip:skip,bypasscache: true)
             
             // echo the request
             if let (gkind,_) =  ReportMaker.reportfuncs[reportname]{
@@ -213,7 +213,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
         var pdx: PersonData!
         if bypasscache == true {
             if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
-                Log.error(" Report:\(reportname) found user \(id) on disk with forced bypass ")
+                //Log.error(" Report:\(reportname) found user \(id) on disk with forced bypass ")
                 ThePdCache[path] = pdxxx // add this to the cache
                 pdx = pdxxx
             }
@@ -222,10 +222,10 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
         let fpdx = ThePdCache[path]
         if fpdx != nil {
             pdx = fpdx!
-            Log.error(" Report:\(reportname) found user \(id) in cache ")
+            //Log.error(" Report:\(reportname) found user \(id) in cache ")
         } else {
             if let pdxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
-                Log.error(" Report:\(reportname) found user \(id) on disk ")
+                //Log.error(" Report:\(reportname) found user \(id) on disk ")
                 ThePdCache[path] = pdxx // add this to the cache
                 pdx = pdxx
             }
@@ -246,7 +246,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
                 let restart = NSDate()
                 sdp.figureLikesAndComments() // compute intermediates!
                 
-                print (sdp.pd.postsStatus())
+               // print (sdp.pd.postsStatus())
                 let (totalcount,body,_) = f(igp: sdp,skip:skip,limit:limit)
                
                 ///

@@ -38,7 +38,7 @@ import Foundation
 class UpdatePipelineStartupOp: NsOp {
     // presumably we've already go it in self.igp so just run all the UI callbacks here
     override func codeWithApiRequestsInBackground() throws {
-        let nextOp = OldMediaPostsOp() // AllMediaPostsOp() NewMediaPostsOp()//
+        let nextOp =  OldMediaPostsOp() // AllMediaPostsOp() NewMediaPostsOp()//NewMediaPostsOp()//
         return self.onward(nextOp)
     }
 }

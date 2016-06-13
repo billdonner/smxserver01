@@ -206,7 +206,7 @@ public class FinalWrapUpOp: NsOp   { // no igp hence not NsOp
             /// seems unnecessary here, as it is recomputed for each report
             //self.igp.figureLikesAndComments() // would like to optimize??
             do {
-                NsOp.aprint(self.igp.pd.postsStatus())
+               // NsOp.aprint(self.igp.pd.postsStatus())
                 try self.igp.pd.savePd(userID:self.igp.pd.ouUserInfo.id)
             }
             catch {

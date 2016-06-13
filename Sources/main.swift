@@ -80,6 +80,11 @@ class Sm {
     var operationQueue: NSOperationQueue! // just one queue for now
     var session: NSURLSession = NSURLSession(configuration: NSURLSessionConfiguration.default()) // just one session
     
+    func verificationToken () -> String {
+        let x = ip.components(separatedBy: ".").joined(separator: "") // strip dots
+      return "\(servertag)\(portno)\(x)"
+    }
+    
     func status () -> JSONDictionary  {
         
         let a : JSONDictionary  = [ "software-verision":version,
@@ -123,6 +128,12 @@ func startup_banner() {
             let jsonBody = JSON(data: body!)
             let ip = jsonBody["ip"].string
             Sm.axx.ip = ip!
+            
+            /// once we have an ip address we can
+            /// setup subscription
+            
+            Sm.axx.ci.make_subscription(myVerifyToken:Sm.axx.verificationToken())
+            
             let t =  dict?["version"] ?? "vv??"
             
             Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) \(t!) **********************")
@@ -175,6 +186,9 @@ startup_banner()
 /// Create or restore the Membership DB
 ///
 Membership.restoreMembership()
+
+
+
 ///
 /// The Kitura router
 ///
@@ -185,7 +199,9 @@ let router = Router()
 ///
 SMaxxRouter.setupRoutes( router: router)
 
+
 let server = HTTPServer.listen(port: Sm.axx.portno, delegate:router)
 
 Server.run()
+
 /// strangely, this runs off the bottom

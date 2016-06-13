@@ -128,8 +128,6 @@ class Workers:NSObject {
         if    let mem = Membership.shared.members[id],
             let token = mem["access_token"] as? String {
             make_worker_for(id: id, token: token) 
-            
-            activeWorkers[id] = id //keep trak - could fill with anything
            
             
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")

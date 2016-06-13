@@ -118,6 +118,20 @@ public class SMaxxRouter {
                 next()
             }
         
+             ///
+            // MARK: Callback GETs and POSTs from IG come here
+             ///
+            router.post("/postcallback") {
+                request, response, next in
+                Sm.axx.ci.handle_post_callback(request: request,response: response)
+                next()
+            }
+            router.get("/postcallback") {
+                request, response, next in
+                 Sm.axx.ci.handle_get_callback(myVerifyToken:Sm.axx.verificationToken(),request: request,response: response)
+                next()
+            }
+            
         ///
         // MARK:- Show a FrontPage
         ///
