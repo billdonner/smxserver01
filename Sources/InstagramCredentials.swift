@@ -108,6 +108,7 @@ public class InstagramCredentials {
                         catch {
                             Log.error("could not send verify response to Instagram")
                         }
+                        Log.info("Post register GET callback supplies token \(reply)")
                         return
                     }
                 }
