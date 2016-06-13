@@ -53,7 +53,8 @@ public class InstagramCredentials {
                 let jsonBody = JSON(data: body!)
                 let meta = jsonBody["meta"]["code"].intValue
                 guard meta == 200 else {
-                    fatalError ("subscription \(myVerifyToken) was unsuccessful meta \(meta)")
+                     Log.error ("subscription \(myVerifyToken) was unsuccessful meta \(meta)")
+                    return
                 }
                 
                 Log.info("* subscription \(myVerifyToken) successful")
