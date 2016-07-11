@@ -48,32 +48,31 @@ public class NsOp: NSOperation {
             if pcc > mincc {
             } else
             if pcc < mincc {
-                let prev = self.igp.pd.ouMinMediaPostID
+               // let prev = self.igp.pd.ouMinMediaPostID
                 self.igp.pd.ouMinMediaPostID = postid
-                print("ccmin was \(prev) set to \(postid)")
+               // print("ccmin was \(prev) set to \(postid)")
                 
             } else
                 if  postid < self.igp.pd.ouMinMediaPostID {
-                    
-                    let prev = self.igp.pd.ouMinMediaPostID
+                    //let prev = self.igp.pd.ouMinMediaPostID
                     self.igp.pd.ouMinMediaPostID = postid
-                    print("min was \(prev) set to \(postid)")
+                   // print("min was \(prev) set to \(postid)")
             }
             
             // now figure max
              if pcc < maxcc {
             } else
             if pcc > maxcc {
-                let prev = self.igp.pd.ouMaxMediaPostID
+                //let prev = self.igp.pd.ouMaxMediaPostID
                 self.igp.pd.ouMaxMediaPostID = postid
-                print("ccmax was \(prev) set to \(postid)")
+               // print("ccmax was \(prev) set to \(postid)")
             } else
             {
                 if postid > self.igp.pd.ouMaxMediaPostID {
                     
-                    let prev = self.igp.pd.ouMaxMediaPostID
+                    //let prev = self.igp.pd.ouMaxMediaPostID
                     self.igp.pd.ouMaxMediaPostID = postid
-                    print("max was \(prev) set to \(postid)")
+                    //print("max was \(prev) set to \(postid)")
                 }
             }
         }
@@ -122,7 +121,7 @@ public class NsOp: NSOperation {
     }
     override init ( ) {
         super.init()
-        self.queuePriority = .high
+        self.queuePriority = .low
         self.qualityOfService = .userInitiated
     }
 }

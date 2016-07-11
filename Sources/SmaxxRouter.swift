@@ -117,7 +117,13 @@ public class SMaxxRouter {
                 HomePage.buildStatus(request,response)
                 next()
             }
-        
+            router.get("/log") {
+                request, response, next in
+                let qp = request.queryParams
+                Log.info("LOGLINE \(qp)")
+                   response.status(HTTPStatusCode.OK)
+                next()
+            }
              ///
             // MARK: Callback GETs and POSTs from IG come here
              ///

@@ -413,9 +413,9 @@ extension IGOps { // networking
         case MediaRecentBelowMax(String,String,String )//token,min_id,max_id
         case MediaRecentInRange(String,String,String,String)//token,min_id,max_id
         
-        case SelfMediaLiked(String,String)
-        case SelfFollowing(String,String)
-        case SelfFollowedBy(String,String)
+//        case SelfMediaLiked(String,String)
+//        case SelfFollowing(String,String)
+//        case SelfFollowedBy(String,String)
         case Following(String,String) // deprecated by instagram ...soon
         case FollowedBy(String,String) // deprecated by instagram ...
         
@@ -432,52 +432,60 @@ extension IGOps { // networking
                     return (pathString, ["access_token": accessToken ])
                     
                 case .UserInfo (let userID, let accessToken):
-                    let pathString = "/v1/users/" + userID
+                  let pathString = "/v1/users/" + userID
                     return (pathString, ["access_token": accessToken ])
                     
                 case .MediaLikes (let mediaID, let accessToken):
-                    let pathString = "/v1/media/" + mediaID + "/likes"
+                 
+                   let pathString = "/v1/media/" + mediaID + "/likes"
                     return (pathString, ["access_token": accessToken ])
                     
                 case .MediaComments (let mediaID, let accessToken):
-                    let pathString = "/v1/media/" + mediaID + "/comments"
+                
+                 let pathString = "/v1/media/" + mediaID + "/comments"
                     return (pathString, ["access_token": accessToken ])
                     
-                case .MediaRecent (let userID, let accessToken ):
+                case .MediaRecent ( _ , let accessToken ):
+                    let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
                     return (pathString, ["access_token": accessToken ])
                     
-                case .MediaRecentAboveMin (let userID, let accessToken, let minID  ):
-                    let pathString = "/v1/users/" + userID + "/media/recent"
+                case .MediaRecentAboveMin ( _ , let accessToken, let minID  ):
+                   let userID = "self"
+                   let pathString = "/v1/users/" + userID + "/media/recent"
                     return (pathString, ["access_token": accessToken,"min_id":minID  ])
                     
-                case .MediaRecentBelowMax (let userID, let accessToken, let maxID ):
-                    let pathString = "/v1/users/" + userID + "/media/recent"
+                case .MediaRecentBelowMax ( _ , let accessToken, let maxID ):
+                   let userID = "self"
+                   let pathString = "/v1/users/" + userID + "/media/recent"
                     return (pathString, ["access_token": accessToken, "max_id":maxID  ])
                     
-                case .MediaRecentInRange (let userID, let accessToken, let minID, let maxID ):
+                case .MediaRecentInRange ( _ , let accessToken, let minID, let maxID ):
+                    let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
                     return (pathString, ["access_token": accessToken,"min_id":minID,"max_id":maxID  ])
                     
-                case .SelfMediaLiked (  _, let accessToken):
-                    let pathString = "/v1/users/self/media/liked"
+//                case .SelfMediaLiked (  _, let accessToken):
+//                    let pathString = "/v1/users/self/media/liked"
+//                    return (pathString, ["access_token": accessToken ])
+                    
+                case .Following ( _  , let accessToken):
+                   let userID = "self"
+                   let pathString = "/v1/users/" + userID + "/follows"
                     return (pathString, ["access_token": accessToken ])
                     
-                case .Following (let userID , let accessToken):
-                    let pathString = "/v1/users/" + userID + "/follows"
-                    return (pathString, ["access_token": accessToken ])
-                    
-                case .FollowedBy (let userID, let accessToken ):
+                case .FollowedBy ( _ , let accessToken ):
+                    let userID = "self"
                     let pathString = "/v1/users/" + userID + "/followed-by"
                     return (pathString, ["access_token": accessToken ])
                     
-                case .SelfFollowing ( _, let accessToken):
-                    let pathString = "/v1/users/" + "self" + "/follows"
-                    return (pathString, ["access_token": accessToken ])
-                    
-                case .SelfFollowedBy (  _, let accessToken):
-                    let pathString = "/v1/users/" + "self" + "/followed-by"
-                    return (pathString, ["access_token": accessToken ])
+//                case .SelfFollowing ( _, let accessToken):
+//                    let pathString = "/v1/users/" + "self" + "/follows"
+//                    return (pathString, ["access_token": accessToken ])
+//                    
+//                case .SelfFollowedBy (  _, let accessToken):
+//                    let pathString = "/v1/users/" + "self" + "/followed-by"
+//                    return (pathString, ["access_token": accessToken ])
                     
                     
                     // default: break
