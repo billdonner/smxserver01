@@ -1,7 +1,9 @@
 # smxserver01
 ibm kitura based server for Instagram Analytics
 
-base code for Kitura based t5 server
+base code for Kitura based t5 server 
+[https://github.com/IBM-Swift/Kitura](https://github.com/IBM-Swift/Kitura)
+
 pure swift 3.0
 
 Regretably, Instagram Has Restricted Their Apis
