@@ -1,6 +1,8 @@
 # smxserver01
 ibm kitura based server for Instagram Analytics
 
+![http://billdonner.com/instagramanalytics/instagramanalytics.001.png](http://billdonner.com/instagramanalytics/instagramanalytics.001.png)
+
 base code for Kitura based t5 server 
 [https://github.com/IBM-Swift/Kitura](https://github.com/IBM-Swift/Kitura)
 
