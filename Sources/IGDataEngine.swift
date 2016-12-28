@@ -32,24 +32,24 @@ extension IGDataEngineDelegate {
 
 // MARK: - The Pipeline is a Long Running Sequence of Specialty NSOperations
 private class IGBackgroundLoadingPipeline {
-    private var callingVC: IGDataEngineDelegate?
-    private var notifKey: String?
-    private var finalWrapUpOp : FinalWrapUpOp?
+    fileprivate var callingVC: IGDataEngineDelegate?
+    fileprivate var notifKey: String?
+    fileprivate var finalWrapUpOp : FinalWrapUpOp?
  
     
 }
 
 public struct  IGDataEngine {
     // MARK: - Components that are UI free
-    private var targetUserID: String
-    private var targetToken: String
-    private var igData:SocialDataProcessor
-    private var delegate: IGDataEngineDelegate?
-    private var notifKey  : String?
+    fileprivate var targetUserID: String
+    fileprivate var targetToken: String
+    fileprivate var igData:SocialDataProcessor
+    fileprivate var delegate: IGDataEngineDelegate?
+    fileprivate var notifKey  : String?
     
-    private var igBackgroundLoadingPipeline : IGBackgroundLoadingPipeline
+    fileprivate var igBackgroundLoadingPipeline : IGBackgroundLoadingPipeline
     
-    private var startTime : NSDate?
+    fileprivate var startTime : Date?
     
     init(forLoggedOnUser:String, targetToken:String, delegate:IGDataEngineDelegate?) {
         self.targetUserID = forLoggedOnUser
@@ -59,7 +59,7 @@ public struct  IGDataEngine {
         self.delegate = delegate
     }
     
-    func checkapierr(errcode:Int) {
+    func checkapierr(_ errcode:Int) {
         guard errcode == 200  else {
             // removed from server version -= FS.removeUserData(self.targetUserID)
             // do something
@@ -75,7 +75,7 @@ public struct  IGDataEngine {
             fatalError("-- YIKES error \(errcode) from fullStartup, please contact your vendor")
         }
     }
-    private       func  loadupForBackgroundOperation( pipelineNamed:String , notifKey:String? , igp:SocialDataProcessor, delegate: IGDataEngineDelegate? ) -> (NsOp,FinalWrapUpOp) {
+    fileprivate       func  loadupForBackgroundOperation( _ pipelineNamed:String , notifKey:String? , igp:SocialDataProcessor, delegate: IGDataEngineDelegate? ) -> (NsOp,FinalWrapUpOp) {
         
         func startLoadingPipeline(pipelineNamed named:String , notifKey:String? ,igp: SocialDataProcessor) -> (StartingPipelineOp?,FinalWrapUpOp? ){
             // no concurrency for now, each pipeline is a single threaded sequence of api calls
@@ -105,45 +105,45 @@ public struct  IGDataEngine {
         return (start!,final!) // and return the ultimate final block
     }
     
-     func startPipeline(firstOp:NSOperation) {
+     func startPipeline(_ firstOp:Operation) {
         //print("* starting Pipeline with  \(firstOp) added to operation Q")
         Sm.axx.operationQueue.addOperation(firstOp) // this kicks it off
     }
-    mutating public func setupPipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
+    mutating public func setupPipeline (_ notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
         // load user data
         self.igData = igp
-        self.startTime = NSDate()
+        self.startTime = Date()
         let l : (NsOp,FinalWrapUpOp)
         do {
             
             print("* will restore from disk for  user \(self.targetUserID) data...")
-            let pd = try  PersonData.restore(userID:self.targetUserID)
+            let pd = try  PersonData.restore(self.targetUserID)
             // if restore fails we go down to the catch
             self.igData.pd = pd
             self.targetUserID = self.igData.targetID            // start pipeline after good restore from disk
             print("* pulling from disk for user \(self.targetUserID) schema version is \(igp.pd.ouVersion!) ... ")
-              l  = loadupForBackgroundOperation(pipelineNamed:"diskpipe",notifKey: notifKey,  igp: igp, delegate: self.delegate)
+              l  = loadupForBackgroundOperation("diskpipe",notifKey: notifKey,  igp: igp, delegate: self.delegate)
             
             
         }
         catch (_)  {
             // start pipeline to interact with Instagram
             print("* could not restore from disk - contacting Instagram for new user \(self.targetUserID) data...")
-            l  =  loadupForBackgroundOperation(pipelineNamed: "mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
+            l  =  loadupForBackgroundOperation("mainpipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
             
         }// end of catch
         
         //
         return l
     }//pull sR
-    mutating public func setupUpdatePipeline (notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
+    mutating public func setupUpdatePipeline (_ notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
         // load user data
         self.igData = igp
-        self.startTime = NSDate()
+        self.startTime = Date()
         let l : (NsOp,FinalWrapUpOp)
         print("*** setupUpdatePipeline periodic update")
         // start pipeline to interact with Instagram  
-        l  =  loadupForBackgroundOperation(pipelineNamed: "updatepipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
+        l  =  loadupForBackgroundOperation("updatepipe", notifKey: notifKey, igp: igp, delegate: self.delegate)
         return l
     }//pull sR
 }

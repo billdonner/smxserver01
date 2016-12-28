@@ -36,7 +36,7 @@ class RelationshipStatusOp: NsOp {
                     
                 } // end 1  guard
                 if statusData != nil  {
-                    self.igp.pd.ouRelationshipToEndUser  = IGOps.convertRelationshipFrom(relationship:statusData! ) // copy to upstream NsOp variable
+                    self.igp.pd.ouRelationshipToEndUser  = IGOps.convertRelationshipFrom(statusData! as IGAnyBlock ) // copy to upstream NsOp variable
                     return self.onward(RelationshipStatusHandler())
                 }
                 else {
@@ -65,7 +65,7 @@ class UserCredentialsOp: NsOp {
                 } // end 1  guard
                 if igPerson  != nil  {
                     
-                    self.igp.pd.ouUserInfo =     IGOps.convertPersonFrom(person:igPerson!)
+                    self.igp.pd.ouUserInfo =     IGOps.convertPersonFrom(igPerson! as IGUserBlock)
                     //print("Converted from \(igPerson!)")
                     // copy to upstream NsOp variable
                     return self.onward(UserCredentialsHandler())
@@ -90,7 +90,7 @@ class UserCredentialsHandler: NsHandlerOp {
 class AllMediaPostsOp: NsOp {
     override func  codeWithApiRequestsInBackground() throws  {
         var posts : [IGMediaBlock] = []
-        func isuniq(post:IGMediaBlock) -> Boolean {
+        func isuniq(_ post:IGMediaBlock) -> DarwinBoolean {
             /// AWFUL SLOW
             let t =  post["id"] as? String
             for apost in self.igp.pd.ouMediaPosts {
@@ -106,8 +106,8 @@ class AllMediaPostsOp: NsOp {
         /// on a brand new user we just ask generally
         try
             IGOps.getmediaPosts (igp.targetID,  each: { onePost in
-                if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
-              self.handleMediaPostMinMax(post: onePost)
+                if isuniq(onePost).boolValue { posts.append(onePost) // accumulate min and max here
+              self.handleMediaPostMinMax(onePost)
                 }
             } ) { errcode in
                 guard  errcode == 200 else  {
@@ -127,7 +127,7 @@ class AllMediaPostsOp: NsOp {
 class OldMediaPostsOp: NsOp {
     override func  codeWithApiRequestsInBackground() throws  {
         var posts : [IGMediaBlock] = []
-        func isuniq(post:IGMediaBlock) -> Boolean {
+        func isuniq(_ post:IGMediaBlock) -> DarwinBoolean {
             /// AWFUL SLOW
             let t =  post["id"] as? String
             for apost in self.igp.pd.ouMediaPosts {
@@ -144,8 +144,8 @@ class OldMediaPostsOp: NsOp {
         let maxt =  self.igp.pd.ouMinMediaPostID // ask for things below this id
         try
             IGOps.getmediaPostsBelowMax (igp.targetID, maxid: maxt , each: { onePost in
-                if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
-                self.handleMediaPostMinMax(post: onePost)
+                if isuniq(onePost).boolValue { posts.append(onePost) // accumulate min and max here
+                self.handleMediaPostMinMax(onePost)
                 }
            
             } ) { errcode in
@@ -166,7 +166,7 @@ class OldMediaPostsOp: NsOp {
 class NewMediaPostsOp: NsOp {
     override func  codeWithApiRequestsInBackground() throws  {
         var posts : [IGMediaBlock] = []
-        func isuniq(post:IGMediaBlock) -> Boolean {
+        func isuniq(_ post:IGMediaBlock) -> DarwinBoolean {
             /// AWFUL SLOW
             let t =  post["id"] as? String
             for apost in self.igp.pd.ouMediaPosts {
@@ -182,8 +182,8 @@ class NewMediaPostsOp: NsOp {
         let maxt =  self.igp.pd.ouMaxMediaPostID // ask for things below this id
         try
             IGOps.getmediaPostsAboveMin (igp.targetID, minid: maxt , each: { onePost in
-                 if isuniq(post:onePost) { posts.append(onePost) // accumulate min and max here
-                self.handleMediaPostMinMax(post: onePost)
+                 if isuniq(onePost).boolValue { posts.append(onePost) // accumulate min and max here
+                self.handleMediaPostMinMax(onePost)
                 }
                 
             } ) { errcode in
@@ -240,7 +240,7 @@ class AllFollowersHandler: NsHandlerOp {
         self.igp.rawFollowers.sort{ // sort by id order in case of subsequent merge
             ($0["id"] as! String) < ($1["id"] as! String)
         }
-        self.igp.pd.ouAllFollowers = IGOps.convertPeopleFrom(people:self.igp.rawFollowers)
+        self.igp.pd.ouAllFollowers = IGOps.convertPeopleFrom(self.igp.rawFollowers)
         self.igp.rawFollowers = [] // reclaim
         
         return self.onward(AllFollowingOp() )
@@ -277,7 +277,7 @@ class AllFollowingHandler: NsHandlerOp {
         self.igp.rawFollowers.sort{ // sort by id order in case of subsequent merge
             ($0["id"] as! String) < ($1["id"] as! String)
         }
-        self.igp.pd.ouAllFollowing = IGOps.convertPeopleFrom(people:self.igp.rawFollowing)
+        self.igp.pd.ouAllFollowing = IGOps.convertPeopleFrom(self.igp.rawFollowing)
         self.igp.rawFollowing = [] // reclaim
         self.delegate?.didProcessAllFollowers(self.igp )
         // keep going until we exhaust the posts
@@ -314,7 +314,7 @@ class OneMediaPostCommentsOp: NsOp {
                     
                 } // end 1  guard
                 
-                self.igp.rawCommentsDict[self.mediaBlock["id"] as! String] = IGOps.convertCommentsFrom(comments:commenters)
+                self.igp.rawCommentsDict[self.mediaBlock["id"] as! String] = IGOps.convertCommentsFrom(commenters)
                 
                 return self.onward(OneMediaPostCommentsHandler())
         }
@@ -350,7 +350,7 @@ class OneMediaPostLikesOp: NsOp {
                 } // end 1  guard
                 // park the full vector upstairs
                 
-                self.igp.rawLikesDict[self.mediaBlock["id"] as! String] = IGOps.convertPeopleFrom(people:likers)
+                self.igp.rawLikesDict[self.mediaBlock["id"] as! String] = IGOps.convertPeopleFrom(likers)
                 return self.onward(OneMediaPostLikesHandler() )
         }
     }
@@ -365,7 +365,7 @@ class OneMediaPostLikesHandler: NsHandlerOp {
                 if  let theid = onepost["id"] as? String,
                     let tlikers = self.igp.rawLikesDict[theid],
                     let commentz = self.igp.rawCommentsDict[theid] {
-                    let reformattedpost = IGOps.convertPostFrom(media:onepost, likers: tlikers , comments: commentz)
+                    let reformattedpost = IGOps.convertPostFrom(onepost, likers: tlikers , comments: commentz)
                     posts.append( reformattedpost)
                 }
             }

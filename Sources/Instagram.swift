@@ -10,35 +10,35 @@
 //  moved non-IG stuff to OUdata on 5/11
 import Foundation
 
-typealias IGAnyBlock = NSDictionary
+typealias IGAnyBlock = [String:AnyObject]// NSDictionary
 typealias IGStatusBlock = IGAnyBlock
 typealias IGMediaBlock = IGAnyBlock
 typealias IGUserBlock = IGAnyBlock
 
 typealias BunchOfIGMedia = [IGMediaBlock]
 typealias BunchOfIGPeople = [IGUserBlock]
-typealias BOPCompletionFunc = IGUserBlock->()
-typealias BOMCompletionFunc = IGMediaBlock->()
+typealias BOPCompletionFunc = (IGUserBlock)->()
+typealias BOMCompletionFunc = (IGMediaBlock)->()
 
-typealias ParseIgJSONIgPeopleFunc  = (NSURL?,BunchOfIGPeople)->()
-typealias ParseIgJSONIgMediaFunc  = (NSURL?,BunchOfIGMedia)->()
+typealias ParseIgJSONIgPeopleFunc  = (URL?,BunchOfIGPeople)->()
+typealias ParseIgJSONIgMediaFunc  = (URL?,BunchOfIGMedia)->()
 typealias ParseIgJSONOAuthFunc  = (String,String)->()
 typealias ParseIgJSONDictFunc  = (Int,BasicDict)->()
-typealias FollowersSortFunc = (user1: UserData ,user2: UserData  ) -> Bool
-typealias BattleSortFunc = (a: UserData ,b: UserData ) -> Bool
+typealias FollowersSortFunc = (_ user1: UserData ,_ user2: UserData  ) -> Bool
+typealias BattleSortFunc = (_ a: UserData ,_ b: UserData ) -> Bool
 
 
-enum SMaxxError: ErrorProtocol {
-    case NoID
-    case Bad (arg:Int)
-    case FailedToLoadDataFromURL(url : String)
-    case CantDecodeIGPersonDataFile(message: String)
-    case CantRestoreIGPersonDataFile(message: String)
-    case CantWriteIGPersonDataFile(message: String)
-    case CantWriteMembership(message: String)
-    case CantRestoreMembership(message: String)
-    case CantDecodeMembership(message: String)
-    case NoAccessTokenForUser(id: String)
+enum SMaxxError: Error {
+    case noID
+    case bad (arg:Int)
+    case failedToLoadDataFromURL(url : String)
+    case cantDecodeIGPersonDataFile(message: String)
+    case cantRestoreIGPersonDataFile(message: String)
+    case cantWriteIGPersonDataFile(message: String)
+    case cantWriteMembership(message: String)
+    case cantRestoreMembership(message: String)
+    case cantDecodeMembership(message: String)
+    case noAccessTokenForUser(id: String)
     
 }
 
@@ -64,14 +64,14 @@ struct Instagram {
     }
     // open Instagram app in various ways
     
-    static func grandTotalLikes(ig:SocialDataProcessor ) -> Int {
+    static func grandTotalLikes(_ ig:SocialDataProcessor ) -> Int {
         var total = 0
         for (_,val) in ig.likersDict {
             total += val.count
         }
         return total
     }
-    static func countsAndAveragesFromPosts(ig:SocialDataProcessor ,igPerson: UserData) -> (Int,String,Int,String) {
+    static func countsAndAveragesFromPosts(_ ig:SocialDataProcessor ,igPerson: UserData) -> (Int,String,Int,String) {
         var counter = 0
         var avg = 0.0
         if  let a = ig.likersDict [igPerson.id] {
@@ -93,7 +93,7 @@ struct Instagram {
     
     
     // return tuples that can be divided to get avg :)
-    static func dictOfAvLikersArossBunchOfMedia(posts: BunchOfMedia) ->  AnalysisBlock {
+    static func dictOfAvLikersArossBunchOfMedia(_ posts: BunchOfMedia) ->  AnalysisBlock {
         var ret :  AnalysisBlock = [:]
         var postcount = 0
         for onepost in posts {
@@ -119,12 +119,12 @@ struct Instagram {
         }
         return ret
     }
-    static func dictOfTaggedUsersForUser(aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
+    static func dictOfTaggedUsersForUser(_ aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
         var ret : StringAnalysisBlock = [:]
         
         var postcount = 0
         for onepost in posts {
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             if let _ = onepost.likers[aUserID] {// are we a liker?
                 
                 // each tag in each post liked by this user
@@ -144,12 +144,12 @@ struct Instagram {
         }// for posts
         return ret
     }
-    static func dictOfFiltersForUser(aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
+    static func dictOfFiltersForUser(_ aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
         var ret : StringAnalysisBlock = [:]
         
         var postcount = 0
         for onepost in posts {
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             if let _ = onepost.likers[aUserID] {// are we a liker?
                 
                 // each tag in each post liked by this user
@@ -167,12 +167,12 @@ struct Instagram {
         return ret
     }
     
-    static func dictOfTagsForUser(aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
+    static func dictOfTagsForUser(_ aUserID:String, posts: BunchOfMedia) -> StringAnalysisBlock {
         var ret : StringAnalysisBlock = [:]
         
         var postcount = 0
         for onepost in posts {
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             if let _ = onepost.likers[aUserID] {// are we a liker?
                 // each tag in each post liked by this user
                 for atag in onepost.tags {
@@ -193,7 +193,7 @@ struct Instagram {
         var ret : StringAnalysisBlock = [:]
         var postcount = 0
         for onepost in x {
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             
             // each tag in each post
             for atag in onepost.tags {
@@ -213,7 +213,7 @@ struct Instagram {
         var ret : StringAnalysisBlock = [:]
         var postcount = 0
         let _ = x.map { onepost in
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             let l = onepost.taggedUsers
             // each user tagged  in each post
             let _ =  l.map { taggeduser in
@@ -234,7 +234,7 @@ struct Instagram {
         var postcount   = 0
         for onepost in x {
             // get count of likers for this post
-            let likersCount = onepost.likers.count ?? 0
+            let likersCount = onepost.likers.count 
             
             // each filter  in each post
             for afilter in onepost.filters {
@@ -250,7 +250,7 @@ struct Instagram {
         return ret
     }
     
-    static func dictOfAvCommenteursArossBunchOfMedia( posts: BunchOfMedia) -> AnalysisBlock {
+    static func dictOfAvCommenteursArossBunchOfMedia( _ posts: BunchOfMedia) -> AnalysisBlock {
         var ret : AnalysisBlock = [:]
         var postcountBeforeFirstComment  = 0
         for onepost in posts {
@@ -279,14 +279,14 @@ struct Instagram {
     //       // return    intersect(igp.pd.ouAllFollowers, base.pd.ouAllFollowers)
     //        return []
     //    }
-    static func computeFreqCountForLikers(igp:SocialDataProcessor ,filter:OptFilterFunc) ->([Frqc],Int,Int) {
+    static func computeFreqCountForLikers(_ igp:SocialDataProcessor ,filter:OptFilterFunc) ->([Frqc],Int,Int) {
         let likers = igp.likersDict
         var countlikes = 0
         var countlikers = 0
         
         var slikers : [Frqc] = []
         for (key,val) in likers {
-            let b = (filter != nil) ? filter!(key: key,val: val.user) : true
+            let b = (filter != nil) ? filter!(key,val.user) : true
             
             if b == true {
                 countlikers += 1
@@ -300,9 +300,9 @@ struct Instagram {
     
     // MARK:- Speechless Likers - who have never commented
     
-    static func computeFreqCountForSpeechlessLikers(igp:SocialDataProcessor ) ->([Frqc],Int,Int) {
+    static func computeFreqCountForSpeechlessLikers(_ igp:SocialDataProcessor ) ->([Frqc],Int,Int) {
         let likersWhoDontComment = inNotIn(igp.likersDict ,igp.commentersDict)
-        let   x = computeFreqCountForLikers(igp:igp,filter: { key, val in
+        let   x = computeFreqCountForLikers(igp,filter: { key, val in
             if let user = val as?  UserData {
                 let found = likersWhoDontComment[user.id]
                 if found == nil {
@@ -316,12 +316,12 @@ struct Instagram {
     }
     // MARK:- Top Commenters
     
-    static func computeFreqCountForCommenters(igp:SocialDataProcessor ,filter:OptFilterFunc) ->([Frqc],Int,Int) {
+    static func computeFreqCountForCommenters(_ igp:SocialDataProcessor ,filter:OptFilterFunc) ->([Frqc],Int,Int) {
         var countcomments = 0
         var countcommenters = 0
         var slikers : [Frqc] = []
         for (key,val) in igp.commentersDict {
-            let b = (filter != nil) ? filter!(key: key,val: val.user) : true
+            let b = (filter != nil) ? filter!(key,val.user) : true
             
             if b == true {
                 countcommenters += 1
@@ -336,10 +336,10 @@ struct Instagram {
     
     // MARK:- Heartless Commenters - who dont like anything but post anyways
     
-    static func computeFreqCountForHeartlessCommenters(igp:SocialDataProcessor ) ->([Frqc],Int,Int) {
+    static func computeFreqCountForHeartlessCommenters(_ igp:SocialDataProcessor ) ->([Frqc],Int,Int) {
         let commentersWhoDontLike = inNotIn(igp.commentersDict,igp.likersDict )
         
-        let x =  computeFreqCountForCommenters(igp:igp,filter:{ (key, val) -> Bool in
+        let x =  computeFreqCountForCommenters(igp,filter:{ (key, val) -> Bool in
             
             if let user = val as?  UserData {
                 let found = commentersWhoDontLike[user.id]
@@ -355,7 +355,7 @@ struct Instagram {
     
     // MARK: - Top Posts By Comments
     
-    static func computeFreqCountOfCommentersForPosts(posts: BunchOfMedia) ->([Frqi],Int) {
+    static func computeFreqCountOfCommentersForPosts(_ posts: BunchOfMedia) ->([Frqi],Int) {
         
         var slikers : [Frqi] = []
         var totlikes = 0
@@ -373,7 +373,7 @@ struct Instagram {
     
     // MARK: - Top Posts By Likes
     
-    static func computeFreqCountOfLikesForPosts(posts: BunchOfMedia) ->([Frqi],Int) {
+    static func computeFreqCountOfLikesForPosts(_ posts: BunchOfMedia) ->([Frqi],Int) {
         
         var slikers : [Frqi] = []
         var totlikes = 0
@@ -392,7 +392,7 @@ struct Instagram {
     
     // MARK: - Top Posts By  FollowersLikes
     
-    static func computeFreqCountOfFollowersLikesForPosts(igp:SocialDataProcessor ) ->([Frqi],Int) {
+    static func computeFreqCountOfFollowersLikesForPosts(_ igp:SocialDataProcessor ) ->([Frqi],Int) {
         func dictById(_ x: BunchOfPeople) -> [String:Int] {
             var ret : [String:Int] = [:]
             let _ = x.map {
@@ -451,9 +451,9 @@ struct Instagram {
     
     // MARK: - When Do I Post?
     
-    static  func calculateMediaPostHisto24x7(posts: BunchOfMedia)-> MI {
+    static  func calculateMediaPostHisto24x7(_ posts: BunchOfMedia)-> MI {
         var postsPerBucket = Matrix(rows:7, columns: 24) // filled with zeroes
-        let dateFormatter = NSDateFormatter() // expensive
+        let dateFormatter = DateFormatter() // expensive
         var totallikerd = 0
         let _ = posts.map  {post in
             
@@ -467,8 +467,8 @@ struct Instagram {
     }
     
     // MARK: - When Should I Post ?
-    static func calculateMediaLikesHisto24x7(posts: BunchOfMedia)->MI {
-        let dateFormatter = NSDateFormatter() // expensive
+    static func calculateMediaLikesHisto24x7(_ posts: BunchOfMedia)->MI {
+        let dateFormatter = DateFormatter() // expensive
         var postsPerBucket = Matrix(rows:7, columns: 24) // filled with zeroes
         var likesPerBucket = Matrix(rows:7, columns: 24) // filled with zeroes
         var likeRatioBuckets = Matrix(rows:7, columns: 24) // filled with zeroes

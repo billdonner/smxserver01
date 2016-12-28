@@ -22,10 +22,19 @@ public struct ModelData {
     static func membershipPath()->String {
         return documentsPath() + "/_membership/"
     }
-    private static func documentsPath()->String {
-        let docurl =  NSFileManager.default().urlsForDirectory(.documentDirectory, inDomains: .userDomainMask)[0]
-        let docDir = docurl.path ?? "no Documents Dicrectory"
+    fileprivate static func documentsPath()->String {
+    
+        
+        let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
+        let docDir = docurl.path 
         return docDir 
     }
+    
+//    fileprivate static func documentsPath()->String {
+//        let docurl =  FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+//        let docDir = docurl.path ?? "no Documents Dicrectory"
+//        return docDir
+//    }
+    
    
 }

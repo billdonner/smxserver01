@@ -14,7 +14,7 @@
 import SwiftyJSON
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import LoggerAPI
 import Foundation
 
@@ -24,13 +24,13 @@ import Foundation
 ///
 struct HomePage {
     
-    private static func standard_footer()->String {
+    fileprivate static func standard_footer()->String {
         let s = Sm.axx.modes.joined(separator: "+")
         return    "<footer><caption>\(Sm.axx.ip):\(Sm.axx.portno)-\(Sm.axx.servertag)-\(s) \(Sm.axx.packagename) version:-\(Sm.axx.version) </caption>" +
-            "<p>built on <a href = 'https://swift.org'>Swift 3</a>, <a href = 'https://github.com/IBM-Swift/Kitura'>Kitura Web Server</a>, <a href = 'http://www.noip.com'>no-IP.com</a>, <a href = 'https://runstatus.com'>runstatus.com</a>, <a href = 'https://centralops.net'>centralops.net</a></caption> and <a href = 'https://centralops.net'>OS X 10.11 El Capitan</a></caption>" + "<br/><caption>this page produced at \(NSDate()) <a href='/fp'>Front Panel</a> <a href = '/status'>status</a></caption></footer></body> </html>"
+            "<p>built on <a href = 'https://swift.org'>Swift 3</a>, <a href = 'https://github.com/IBM-Swift/Kitura'>Kitura Web Server</a>, <a href = 'http://www.noip.com'>no-IP.com</a>, <a href = 'https://runstatus.com'>runstatus.com</a>, <a href = 'https://centralops.net'>centralops.net</a></caption> and <a href = 'https://centralops.net'>OS X 10.11 El Capitan</a></caption>" + "<br/><caption>this page produced at \(Date()) <a href='/fp'>Front Panel</a> <a href = '/status'>status</a></caption></footer></body> </html>"
     }
     
-    private static  func standard_header()->String {
+    fileprivate static  func standard_header()->String {
         return  "<!DOCTYPE html><head>" +
             " <meta charset='UTF-8' />" +
             " <title>\(Sm.axx.title) App Service </title>" +
@@ -42,7 +42,7 @@ struct HomePage {
         "footer {font-size:.6em} </style></head><body>"
     }
     
-    static func frontpanel1(idstr:String,serverip:String)->String {
+    static func frontpanel1(_ idstr:String,serverip:String)->String {
         return standard_header() +
             " <h1>\(Sm.axx.title) Reports for \(idstr)</h1>" +
             "<p><a href = '/fp'>back to front panel</a></p>" +
@@ -73,7 +73,7 @@ struct HomePage {
             standard_footer()
         
     }
-    static func frontpanel2(serverip:String )->String {
+    static func frontpanel2(_ serverip:String )->String {
         return standard_header() +
             " <h1>\(Sm.axx.title) Membership Administration</h1>" +
             
@@ -93,7 +93,7 @@ struct HomePage {
             
             standard_footer()
     }
-    static func frontpanel (serverip:String )->String {
+    static func frontpanel (_ serverip:String )->String {
         
         let flavors = Sm.axx.modes
          let reps =   ""// flavors.contains("reports") ?
@@ -138,7 +138,7 @@ struct HomePage {
         return standard_header() + headline + mems + wks + reps + monitor +  standard_footer()
         
     }
-    static func homepage(serverip:String )->String {
+    static func homepage(_ serverip:String )->String {
         var s:String
         let url = ModelData.staticPath() + "/body.html"
         do {
@@ -169,14 +169,14 @@ struct HomePage {
     static   func buildFrontPage(_ request:RouterRequest,_ response:RouterResponse) {
         var buf = ""
         let serverip = Sm.axx.ip
-        if  let id  = request.queryParams["id"] {
-            buf = HomePage.frontpanel1(idstr:id,serverip:serverip)
+        if  let id  = request.queryParameters["id"] {
+            buf = HomePage.frontpanel1(id,serverip:serverip)
         }
-        else      if  let _  = request.queryParams["admin"] {
-            buf = HomePage.frontpanel2(serverip: serverip)
+        else      if  let _  = request.queryParameters["admin"] {
+            buf = HomePage.frontpanel2(serverip)
         }
         else {
-            buf = HomePage.frontpanel(serverip: serverip)
+            buf = HomePage.frontpanel(serverip)
         }
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
@@ -189,7 +189,7 @@ struct HomePage {
 static    func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) {
         
         let serverip = Sm.axx.ip
-        let buf = HomePage.homepage(serverip: serverip)
+        let buf = HomePage.homepage(serverip)
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
             try response.status(HTTPStatusCode.OK).send(buf).end()
@@ -200,7 +200,7 @@ static    func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) 
     }
 }
 
-public class RestSupport {
+open class RestSupport {
     /// complain of missing id
     class  func missingID(_ response:RouterResponse) {
         response.status(HTTPStatusCode.badRequest)

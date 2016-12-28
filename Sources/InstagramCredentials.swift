@@ -13,7 +13,7 @@
 //
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
@@ -23,13 +23,13 @@ import Foundation
 ///  however, this is not a plugin and it uses NSURLSession to communicate with Instagram, not the Kitura HTTP library
 
 
-public class InstagramCredentials {
-    private var clientId : String
-    private var clientSecret : String
-    public var callbackUrl : String
-    public var callbackPostUrl : String
-    public var callbackBase : String
-    public var name : String {
+open class InstagramCredentials {
+    fileprivate var clientId : String
+    fileprivate var clientSecret : String
+    open var callbackUrl : String
+    open var callbackPostUrl : String
+    open var callbackBase : String
+    open var name : String {
         return "Instagram"
     }
     
@@ -43,9 +43,9 @@ public class InstagramCredentials {
  //Sm.axx.ip + ":\(Sm.axx.portno)"  + "/postcallback"
     }
     /// make subscripyion
-    public func make_subscription (myVerifyToken:String) {
+    open func make_subscription (_ myVerifyToken:String) {
         print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
-        IGOps.perform_post_request(url_to_request: "https://api.instagram.com/v1/subscriptions/",
+        IGOps.perform_post_request("https://api.instagram.com/v1/subscriptions/",
                                    paramString: "client_id=\(clientId)&client_secret=\(clientSecret)" +
                                     "&object=user&aspect=media&verify_token=\(myVerifyToken)&callback_url=\(self.callbackPostUrl)",completion:
             { status, body  in
@@ -64,7 +64,7 @@ public class InstagramCredentials {
         })// closure
     }
     
-    public func handle_post_callback (request: RouterRequest, response: RouterResponse) {
+    open func handle_post_callback (_ request: RouterRequest, response: RouterResponse) {
         /// parse out the callback we are getting back, its json
         var userid = "notfound"
         let t = "\(request.body)" // stringify this HORRIBLE
@@ -84,10 +84,10 @@ public class InstagramCredentials {
     }
     
     /// the get is called in the middle of the post verification
-    public func handle_get_callback (myVerifyToken:String ,request: RouterRequest, response: RouterResponse) {
+    open func handle_get_callback (_ myVerifyToken:String ,request: RouterRequest, response: RouterResponse) {
         
         /// strip out the challenge parameter and return with this only
-        let ps = request.url.components(separatedBy: "?")
+        let ps = request.originalURL.components(separatedBy: "?")
         // make dictionary
         var d: [String:String] = [:]
         if ps.count >= 2 {
@@ -120,7 +120,7 @@ public class InstagramCredentials {
     
     /// OAuth2 steps with Instagram
     
-    public func STEP_ONE(response: RouterResponse) {
+    open func STEP_ONE(_ response: RouterResponse) {
         let cburl = self.callbackUrl + "&nonce=112332123"
         let loc = "https://api.instagram.com/oauth/authorize/?client_id=\(clientId)&redirect_uri=\(cburl)&response_type=code&scope=basic+likes+comments+relationships+follower_list"
         //Log.error("STEP_ONE redirecting to Instagram authorization \(loc)")
@@ -134,11 +134,11 @@ public class InstagramCredentials {
         }
     }
     /// step two: receive request from instagram - has ?code paramater
-    public func STEP_TWO (request: RouterRequest, response: RouterResponse,   completion:((Int) -> ())?) {
-        func inner_two(code:String ) {
+    open func STEP_TWO (_ request: RouterRequest, response: RouterResponse,   completion:((Int) -> ())?) {
+        func inner_two(_ code:String ) {
             let cburl = self.callbackUrl + "&nonce=112332123"
             //  Log.error("STEP_TWO starting with \(     code) just received from Instagram")
-            IGOps.perform_post_request(url_to_request: "https://api.instagram.com/oauth/access_token",
+            IGOps.perform_post_request("https://api.instagram.com/oauth/access_token",
                                        paramString: "client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
                 if status == 200 {
@@ -156,19 +156,18 @@ public class InstagramCredentials {
                             if mu != nil {
                                 // already there, just update last login time
                                 if let created = mu!["created"] as? String {
-                                    Membership.shared.members[userid] = ["id":userid,"created":created,"last-login":nows, "named":title, "pic":pic,"access_token":token ,"smaxx-token":smtoken]
-                                } else {
+                                    Membership.shared.members[userid] = ["id":userid  as AnyObject,"created":created as AnyObject,"last-login":nows as AnyObject, "named":title as AnyObject,  "pic":pic  as AnyObject,"access_token":token  as AnyObject,"smaxx-token":smtoken  as AnyObject] as AnyObject
                                     // error
                                     Log.error("Could not find created field in mu")
                                 }
                             } else {
                                 // not there make new
-                                Membership.shared.members[userid] = ["id":userid,"created":nows,"last-login":nows, "named":title, "pic":pic,"access_token":token,"smaxx-token":smtoken ]
+                                Membership.shared.members[userid] = ["id":userid  as AnyObject,"created":nows  as AnyObject,"last-login":nows  as AnyObject, "named":title  as AnyObject, "pic":pic  as AnyObject,"access_token":token  as AnyObject,"smaxx-token":smtoken   as AnyObject]  as [String:AnyObject] as AnyObject
                             }
                             
                             ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
                             /// adjust membership table and save it to disk
-                            let dict = ["status":200, "data":Membership.shared.members] as  [String:AnyObject]
+                            let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
                             /// save entire pile
                             try  Membership.save ("_membership",dict:dict)
                             //Log.info("saved membership state")
@@ -201,23 +200,23 @@ public class InstagramCredentials {
         }//inner_two
         
         /// authenticate starts here
-        if let error = request.queryParams["error"] {
-            let error_reason = request.queryParams["error_reason"]
-            let error_description = request.queryParams["error_description"]
+        if let error = request.queryParameters["error"] {
+            let error_reason = request.queryParameters["error_reason"]
+            let error_description = request.queryParameters["error_description"]
             
             Log.error("Instagram error \(error) and \(error_reason) - \(error_description)")
         } else
-            if let code = request.queryParams["code"] {
-                if let _ = request.queryParams["nonce"] {
+            if let code = request.queryParameters["code"] {
+                if let _ = request.queryParameters["nonce"] {
                     // print("got nonce \(nonce) ")
                 }
-                inner_two(code:code)
+                inner_two(code)
         }
         
     }// end of step two
     
     /// redirect back from IG from the unwindor path
-    public  func STEP_THREE (request: RouterRequest, response: RouterResponse) {
+    open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
     }
 }

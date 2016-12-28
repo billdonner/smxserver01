@@ -9,9 +9,9 @@ import PackageDescription
 let package = Package(
     name: "t5",
     dependencies: [
-    .Package(url: "https://github.com/IBM-Swift/Kitura.git", majorVersion: 0, minor: 14),//15 is failing on 26 May
-    .Package(url: "https://github.com/IBM-Swift/HeliumLogger.git", majorVersion: 0, minor: 8),
-    .Package(url: "https://github.com/IBM-Swift/LoggerAPI.git", majorVersion: 0, minor: 8)
+    .Package(url: "https://github.com/IBM-Swift/Kitura.git", majorVersion: 1),//15 is failing on 26 May
+    .Package(url: "https://github.com/IBM-Swift/HeliumLogger.git", majorVersion: 1),
+    .Package(url: "https://github.com/IBM-Swift/LoggerAPI.git", majorVersion: 1)
     
      ]
 )

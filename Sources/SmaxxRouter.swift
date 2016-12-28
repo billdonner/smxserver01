@@ -11,7 +11,7 @@
 
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
@@ -27,8 +27,8 @@ import Foundation
 // This will allow 3rd party servers to communicate with this server
 ///
 
-class AllRemoteOriginMiddleware: RouterMiddleware {
-    func handle(request: RouterRequest, response: RouterResponse, next: () -> Void) {
+ class AllRemoteOriginMiddleware: RouterMiddleware {
+    func handle(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
         response.headers["Access-Control-Allow-Origin"] = "*"
         next()
     }
@@ -37,8 +37,9 @@ class AllRemoteOriginMiddleware: RouterMiddleware {
 ///
 // MARK:-  RouterMiddleware can be used for intercepting requests and handling custom behavior
 ///
+
 class BasicAuthMiddleware: RouterMiddleware {
-    func handle(request: RouterRequest, response: RouterResponse, next: () -> Void) {
+    func handle(request: RouterRequest, response: RouterResponse, next: @escaping () -> Void) {
         if let authString = request.headers["Authorization"] {
             Log.info("Authorization: \(authString)")
             
@@ -56,8 +57,9 @@ class BasicAuthMiddleware: RouterMiddleware {
 
 
 
-public class SMaxxRouter {
-          class func setupRoutes(router: Router) {
+open class SMaxxRouter {
+    
+          class func setupRoutes(_ router: Router) {
         //
         // the server can run in several different flavours as determined by the routes that are setup
         //  the flavors are passed in from the original kitura startup command line
@@ -67,7 +69,10 @@ public class SMaxxRouter {
         router.all(middleware: BasicAuthMiddleware())
         router.all("/*", middleware: BodyParser())
         router.all("/*", middleware: AllRemoteOriginMiddleware())
-        let staticFileServer = StaticFileServer(path: ModelData.staticPath(), options: nil)
+            let staticFileServer = StaticFileServer(path:  ModelData.staticPath())
+            //, options: [:], customResponseHeadersSetter: nil)
+            
+            //StaticFileServer(path: ModelData.staticPath(), options: nil)
         router.all("/_/", middleware: staticFileServer)
         
         ///
@@ -82,10 +87,10 @@ public class SMaxxRouter {
         }
         
         if flavors.contains("reports") {
-            SMaxxRouter.setupRoutesForReports(router: router )
+            SMaxxRouter.setupRoutesForReports(router )
         }
         if flavors.contains("membership") {
-            SMaxxRouter.setupRoutesForMembership(router: router )
+            SMaxxRouter.setupRoutesForMembership(router )
         }
         if flavors.contains("workers") {
             SMaxxRouter.setupRoutesForWorkers(router: router )
@@ -119,7 +124,7 @@ public class SMaxxRouter {
             }
             router.get("/log") {
                 request, response, next in
-                let qp = request.queryParams
+                let qp = request.queryParameters
                 Log.info("LOGLINE \(qp)")
                    response.status(HTTPStatusCode.OK)
                 next()
@@ -129,12 +134,12 @@ public class SMaxxRouter {
              ///
             router.post("/postcallback") {
                 request, response, next in
-                Sm.axx.ci.handle_post_callback(request: request,response: response)
+                Sm.axx.ci.handle_post_callback(request,response: response)
                 next()
             }
             router.get("/postcallback") {
                 request, response, next in
-                 Sm.axx.ci.handle_get_callback(myVerifyToken:Sm.axx.verificationToken(),request: request,response: response)
+                 Sm.axx.ci.handle_get_callback(Sm.axx.verificationToken(),request: request,response: response)
                 next()
             }
             
@@ -189,7 +194,7 @@ public class SMaxxRouter {
                 //if  request.originalUrl != "/"  &&  request.originalUrl != ""  {
                 
                 do {
-                    try response.send("Route \( request.originalUrl) not found in Smaxx Router \(Sm.axx.ci.callbackBase)").end()
+                    try response.send("Route \( request.originalURL) not found in Smaxx Router \(Sm.axx.ci.callbackBase)").end()
                 }
                 catch {
                     Log.error("Failed to send response \(error)")

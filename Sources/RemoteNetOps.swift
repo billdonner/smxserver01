@@ -20,31 +20,31 @@ import Foundation
 
 
 struct RemoteNetOps {
-    static func decodeData(sdata:NSData) -> JSON {
+    static func decodeData(_ sdata:Data) -> JSON {
         
             let jsonBody = JSON(data: sdata)
             return jsonBody
 
     }
     
-    private static func dataTask(_ request: NSMutableURLRequest, method: String, completion: NetCompletionFunc) {
+    fileprivate static func dataTask(_ request: NSMutableURLRequest, method: String, completion: @escaping NetCompletionFunc) {
         request.httpMethod = method
-        Sm.axx.session.dataTask(with:request) { (data, response, error) -> Void in
+        Sm.axx.session.dataTask(with:request as URLRequest) { (data, response, error) -> Void in
             
-            if let response = response as? NSHTTPURLResponse {
+            if let response = response as? HTTPURLResponse {
                 let responsecode = response.statusCode
                 
-               print("- dataTask \(responsecode) \(method) \(request.url!.path!)")
+               print("- dataTask \(responsecode) \(method) \(request.url!.path)")
                 if 200...299 ~= response.statusCode {
                
                     if let sdata = data {
                        
-                        let json =  decodeData(sdata: sdata)
+                        let json =  decodeData(sdata)
                             let dict = json.dictionaryObject
-                            completion(status: responsecode, object: dict)
+                            completion(responsecode, dict as AnyObject?)
                     }
                 } else {
-                    completion(status: responsecode, object: nil)
+                    completion(responsecode, nil)
                 }
             }
             }.resume()
@@ -72,15 +72,15 @@ struct RemoteNetOps {
 //            }.resume()
 //    }
     
-    private  static func post(_ request: NSMutableURLRequest, completion:NetCompletionFunc) {
+    fileprivate  static func post(_ request: NSMutableURLRequest, completion:@escaping NetCompletionFunc) {
         RemoteNetOps.dataTask(request, method: "POST", completion: completion)
     }
     
-    private  static func put(_ request: NSMutableURLRequest, completion:NetCompletionFunc) {
+    fileprivate  static func put(_ request: NSMutableURLRequest, completion:@escaping NetCompletionFunc) {
         RemoteNetOps.dataTask(request, method: "PUT", completion: completion)
     }
     
-    private  static func get(_ request: NSMutableURLRequest, completion:NetCompletionFunc) {
+    fileprivate  static func get(_ request: NSMutableURLRequest, completion:@escaping NetCompletionFunc) {
         RemoteNetOps.dataTask(request, method: "GET", completion: completion)
     }
     //not currently used
@@ -106,56 +106,56 @@ struct RemoteNetOps {
 //            return req // feed the beast that wants something returned
 //    }
     
-    static  func nwGetJSON(nsurl:NSURL ,completion:NetCompletionFunc )
-        throws -> NSMutableURLRequest  {
+    static  func nwGetJSON(_ nsurl:URL ,completion:@escaping NetCompletionFunc )
+        throws  { //-> NSMutableURLRequest  {
             
             let req = NSMutableURLRequest(url: nsurl)
-            RemoteNetOps.nwEncode(req:req, parameters: [:])
+            RemoteNetOps.nwEncode(req, parameters: [:])
             
             RemoteNetOps.get(req) {statuscode , data in
                 if data == nil {
                     print("Api Failure  \(statuscode) in nwGetJSON \(nsurl)")
                     
-                    completion(status:statuscode,object:[:])
+                    completion(statuscode,[:]   as AnyObject)
                 }
                 else {
-                    completion(status:statuscode,object:data)
+                    completion(statuscode,data)
                 }
             }
-            return req // feed the beast that wants something returned
+            //return req // feed the beast that wants something returned
     }
     
-    static  func nwPost(nsurl:NSURL, params:[String:AnyObject],completion:NetCompletionFunc)
-        throws  -> NSMutableURLRequest  {
+    static  func nwPost(_ nsurl:URL, params:[String:AnyObject],completion:@escaping NetCompletionFunc)
+        throws  { // -> NSMutableURLRequest  {
             let req = NSMutableURLRequest(url:nsurl)
-            RemoteNetOps.nwEncode(req:req, parameters: params)
+            RemoteNetOps.nwEncode(req, parameters: params)
             RemoteNetOps.post(req) {statuscode , data in
                 if data == nil {
                     print("Api Failure  \(statuscode)   in nwPost \(nsurl)")
                     
-                    completion(status:statuscode,object:[:])
+                    completion(statuscode,[:]  as AnyObject)
                 }
                 else {
-                    completion(status:statuscode,object:data)
+                    completion(statuscode,data)
                 }
             }
-            return req // feed the beast that wants something returned
+           // return req // feed the beast that wants something returned
     }
-    static  func nwPostFromEncodedRequest(req:NSMutableURLRequest,
-                                          completion:NetCompletionFunc)
-        throws  -> NSMutableURLRequest  {
+    static  func nwPostFromEncodedRequest(_ req:NSMutableURLRequest,
+                                          completion:@escaping NetCompletionFunc)
+        throws   { //-> NSMutableURLRequest  {
             //print("nwPost pre-encoded req \(req)")
             RemoteNetOps.post(req) {statuscode , data in
                 if data == nil {
                     print("Api Failure  \(statuscode)   in nwPostFromEncodedRequest")
                     
-                    completion(status:statuscode,object:[:])
+                    completion(statuscode,[:]  as AnyObject)
                 }
                 else {
-                    completion(status:statuscode,object:data)
+                    completion(statuscode,data)
                 }
             }
-            return req // feed the beast that wants something returned
+           // return req // feed the beast that wants something returned
     }
     
     static func killAllTraffic () {
@@ -166,58 +166,58 @@ struct RemoteNetOps {
 //        }
     }
     
-    static  func encodedRequest(fullurl:NSURL, params:URLParamsToEncode?) -> NSMutableURLRequest {
+    static  func encodedRequest(_ fullurl:URL, params:URLParamsToEncode?) -> NSMutableURLRequest {
         
         let parms = (params != nil) ? params! : [:]
         
         let encreq = NSMutableURLRequest(url:fullurl)
-        RemoteNetOps.nwEncode(req:encreq, parameters: parms!)
+        RemoteNetOps.nwEncode(encreq, parameters: parms!)
         
         return encreq
     }
-    static func nwEncode(req:NSMutableURLRequest,parameters:[String:AnyObject]){
+    static func nwEncode(_ req:NSMutableURLRequest,parameters:[String:AnyObject]){
         // extracted from Alamofire
-        func escape(string: String) -> String {
+        func escape(_ string: String) -> String {
             let generalDelimitersToEncode = ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
             let subDelimitersToEncode = "!$&'()*+,;="
-            let allowedCharacterSet = NSCharacterSet.urlQueryAllowed().mutableCopy() as! NSMutableCharacterSet
-            allowedCharacterSet.removeCharacters(in:  generalDelimitersToEncode + subDelimitersToEncode)
+            var allowedCharacterSet = CharacterSet.urlQueryAllowed //as! NSMutableCharacterSet
+           allowedCharacterSet.remove(charactersIn:  generalDelimitersToEncode + subDelimitersToEncode)
             return string.addingPercentEncoding(withAllowedCharacters: allowedCharacterSet) ?? ""
         }
-        func queryComponents(key: String, _ value: AnyObject) -> [(String, String)] {
+        func queryComponents(_ key: String, _ value: AnyObject) -> [(String, String)] {
             var components: [(String, String)] = []
             if let dictionary = value as? [String: AnyObject] {
                 for (nestedKey, value) in dictionary {
-                    components += queryComponents(key:"\(key)[\(nestedKey)]",  value)
+                    components += queryComponents("\(key)[\(nestedKey)]",  value)
                 }
             } else if let array = value as? [AnyObject] {
                 for value in array {
-                    components += queryComponents(key:"\(key)[]", value)
+                    components += queryComponents("\(key)[]", value)
                 }
             } else {
-                let kv = (escape(string:key), escape(string:"\(value)"))
+                let kv = (escape(key), escape("\(value)"))
                 components.append(kv)
             }
             
             return components
         }
-         func query(parameters: [String: AnyObject]) -> String {
+         func query(_ parameters: [String: AnyObject]) -> String {
             var parc = Array(parameters.keys)
             parc.sort()
             var components: [(String, String)] = []
             for key in parc {
                 let value = parameters[key]!
-                components += queryComponents(key:key, value)
+                components += queryComponents(key, value)
             }
             return (components.map { "\($0)=\($1)" } as [String]).joined(separator:"&")
         }
         
-        if  let uRLComponents = NSURLComponents(url: req.url!, resolvingAgainstBaseURL: false){
-            let percentEncodedQuery = (uRLComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters:parameters)
+        if  let uRLComponents = URLComponents(url: req.url!, resolvingAgainstBaseURL: false){
+            let percentEncodedQuery = (uRLComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters)
             // print("percentEncodedQuery = \(percentEncodedQuery)")
-            
-            uRLComponents.percentEncodedQuery = percentEncodedQuery
-            req.url = uRLComponents.url
+            var nurlcomponents = uRLComponents
+            nurlcomponents.percentEncodedQuery = percentEncodedQuery
+            req.url = nurlcomponents.url
         }
         return
     }
@@ -249,7 +249,7 @@ func inAndIn(_ a:AnalysisBlock,_ b:AnalysisBlock) -> AnalysisBlock {
 }
 
 // MARK: Support funcs
- func removeDuplicates(array:BunchOfIGPeople) -> BunchOfIGPeople {
+ func removeDuplicates(_ array:BunchOfIGPeople) -> BunchOfIGPeople {
     var encountered = Set<String>()
     var result: BunchOfIGPeople = []
     for value in array {
@@ -266,7 +266,7 @@ func inAndIn(_ a:AnalysisBlock,_ b:AnalysisBlock) -> AnalysisBlock {
     return result
 }
 
- func reverseFrequencyOrder (aa: BunchOfPeople,
+ func reverseFrequencyOrder (_ aa: BunchOfPeople,
                                    by: BunchOfPeople) ->  BunchOfPeople {
     // reorders the users in aa
     // according to the frequency of references in block by
@@ -301,7 +301,7 @@ func inAndIn(_ a:AnalysisBlock,_ b:AnalysisBlock) -> AnalysisBlock {
     }
     return result
 }
- func intersect(array1:  BunchOfPeople,
+ func intersect(_ array1:  BunchOfPeople,
                       _ array2: BunchOfPeople) ->  BunchOfPeople {
     var encountered = Set<String>()
     var result:  BunchOfPeople = []

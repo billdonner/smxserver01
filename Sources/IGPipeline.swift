@@ -15,7 +15,7 @@ import Foundation
 
 
 // MARK:- Root of All Background NSOperations
-class SoloQForID :NSOperationQueue {
+class SoloQForID :OperationQueue {
     
     init(_ qid:String) {
         super.init()
@@ -24,7 +24,7 @@ class SoloQForID :NSOperationQueue {
 }
 
 
-public class NsOp: NSOperation {
+open class NsOp: Operation {
     weak  var igp:SocialDataProcessor!
     var finalWrapUpOp: FinalWrapUpOp!
     var delegate:IGDataEngineDelegate?
@@ -35,7 +35,7 @@ public class NsOp: NSOperation {
         print(s)
         // }
     }
-    func handleMediaPostMinMax(post:IGMediaBlock) {
+    func handleMediaPostMinMax(_ post:IGMediaBlock) {
         if let postid = post["id"] as? String  {
             
             // instagram has variable size ids
@@ -113,7 +113,7 @@ public class NsOp: NSOperation {
             NsOp.aprint("error \(self) api call here in the background")
         }
     }
-    override public func main() -> () {
+    override open func main() -> () {
         // Log.info ("OP now running in  \(self)")
         if self.isCancelled { return }
         //   DO SOMETHING LENGTHY
@@ -157,7 +157,7 @@ class StartingPipelineOp: NsOp {
         
         self.finalWrapUpOp = FinalWrapUpOp()
         self.subq = SoloQForID(self.igp.targetID)
-        self.igp.pipelineStart = NSDate()
+        self.igp.pipelineStart = Date()
         // run different first op based on opname
         switch self.opname  {
             
@@ -182,15 +182,15 @@ class StartingPipelineOp: NsOp {
     }
 }
 // MARK: - very final step passes notification to initial calling object at main level
-public class FinalWrapUpOp: NsOp   { // no igp hence not NsOp
+open class FinalWrapUpOp: NsOp   { // no igp hence not NsOp
     
     var pipeLineStatus = 200 // normally fine unless overrwitten by caller in error situation
     var needsSaving =  false // properly needs full write if set by caller
     var notificationNamed : String?
     
     
-    override public func main() -> () {
-        dispatch_async(dispatch_get_main_queue()) {
+    override open func main() -> () {
+        DispatchQueue.main.async {
             print(" OP FinalWrapUpOp ",self.igp.targetID)
             
         }
@@ -206,7 +206,7 @@ public class FinalWrapUpOp: NsOp   { // no igp hence not NsOp
             //self.igp.figureLikesAndComments() // would like to optimize??
             do {
                // NsOp.aprint(self.igp.pd.postsStatus())
-                try self.igp.pd.savePd(userID:self.igp.pd.ouUserInfo.id)
+                try self.igp.pd.savePd(self.igp.pd.ouUserInfo.id)
             }
             catch {
                 NsOp.aprint("utterly failed to save context for user \(self.igp.pd.ouUserInfo.id)")
@@ -226,7 +226,8 @@ public class FinalWrapUpOp: NsOp   { // no igp hence not NsOp
         // now notify completion of the pipeline
         // this is where we pass our igp variable back into the calling view controller
         if let notificationNamed = self.notificationNamed {
-            NSNotificationCenter.default().post(name: notificationNamed, object: self)
+            let noti = Notification(name: Notification.Name(rawValue: notificationNamed))
+            NotificationCenter.default.post(noti)
         }
         
         self.subq = nil // release this operationq

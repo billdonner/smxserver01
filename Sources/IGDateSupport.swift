@@ -19,19 +19,19 @@ struct MI {
 struct  IGDateSupport {
     
     
-    static func hourBucket(unixTime: Double,dateFormatter:NSDateFormatter)->Int {
-        let date = NSDate(timeIntervalSince1970: unixTime)
+    static func hourBucket(_ unixTime: Double,dateFormatter:DateFormatter)->Int {
+        let date = Date(timeIntervalSince1970: unixTime)
         
         // Returns date formatted as 24 hour time.
         dateFormatter.dateFormat = "HH"
         return Int( dateFormatter.string(from:date))!
         
     }
-    static func dayOfWeekBucket(unixTime: Double,dateFormatter:NSDateFormatter)->Int {
-        let date = NSDate(timeIntervalSince1970: unixTime)
+    static func dayOfWeekBucket(_ unixTime: Double,dateFormatter:DateFormatter)->Int {
+        let date = Date(timeIntervalSince1970: unixTime)
         
         // Returns date formatted as 24 hour time.
-        dateFormatter.locale = NSLocale(localeIdentifier: NSLocale.current().localeIdentifier)
+        dateFormatter.locale = Locale(identifier: Locale.current.identifier)
         dateFormatter.dateFormat = "EEEE"
         let s =  dateFormatter.string(from:date)
         switch s  {
@@ -49,32 +49,32 @@ struct  IGDateSupport {
         
         
     }
-    static func dateStringFromUnixTime(unixTime: Double,dateFormatter:NSDateFormatter) -> String {
-        let date = NSDate(timeIntervalSince1970: unixTime)
+    static func dateStringFromUnixTime(_ unixTime: Double,dateFormatter:DateFormatter) -> String {
+        let date = Date(timeIntervalSince1970: unixTime)
         
         // Returns date formatted as 12 hour time.
         dateFormatter.dateFormat = "hh:mm a"
         return dateFormatter.string(from:date)
     }
-    static func timeStringFromUnixTime(unixTime: Double,dateFormatter:NSDateFormatter) -> String {
-        let date = NSDate(timeIntervalSince1970: unixTime)
+    static func timeStringFromUnixTime(_ unixTime: Double,dateFormatter:DateFormatter) -> String {
+        let date = Date(timeIntervalSince1970: unixTime)
         
         // Returns date formatted as yearm mon day
         dateFormatter.dateFormat = "MM/dd/yy"
         return dateFormatter.string(from:date)
     }
     
-    static func dayStringFromTime(unixTime: Double,dateFormatter:NSDateFormatter) -> String {
-        let date = NSDate(timeIntervalSince1970: unixTime)
-        dateFormatter.locale = NSLocale(localeIdentifier: NSLocale.current().localeIdentifier)
+    static func dayStringFromTime(_ unixTime: Double,dateFormatter:DateFormatter) -> String {
+        let date = Date(timeIntervalSince1970: unixTime)
+        dateFormatter.locale = Locale(identifier: Locale.current.identifier)
         dateFormatter.dateFormat = "EEEE"
         return dateFormatter.string(from:date)
     }
     //2nd arg not present on ios
-    static func computeTimeBucketFromIGTimeStamp(_ ts:String,dateFormatter:NSDateFormatter) -> (hourOfDay:Int,dayOfWeek:Int) {
+    static func computeTimeBucketFromIGTimeStamp(_ ts:String,dateFormatter:DateFormatter) -> (hourOfDay:Int,dayOfWeek:Int) {
         if let dd = Double(ts) {
-            let hourOfDay = hourBucket(unixTime: dd,dateFormatter: dateFormatter)
-            let dayOfWeek = dayOfWeekBucket(unixTime: dd,dateFormatter: dateFormatter)
+            let hourOfDay = hourBucket(dd,dateFormatter: dateFormatter)
+            let dayOfWeek = dayOfWeekBucket(dd,dateFormatter: dateFormatter)
             return (hourOfDay,dayOfWeek)
         }
         return (hourOfDay:0,dayOfWeek:0)
@@ -82,7 +82,7 @@ struct  IGDateSupport {
     
     
     
-    static func dateOfFirstLike(igp:SocialDataProcessor,likerID:String) throws -> String {
+    static func dateOfFirstLike(_ igp:SocialDataProcessor,likerID:String) throws -> String {
         
         if let t = igp.likersDict [likerID] {
             let idx  = t.postsBeforeFirst,
@@ -90,9 +90,9 @@ struct  IGDateSupport {
             created = onepost.createdTime // as per IG spec
             return created
         }
-        throw SMaxxError.Bad(arg:917)
+        throw SMaxxError.bad(arg:917)
     }
-    static func dateOfLastLike(igp:SocialDataProcessor,likerID:String) throws -> String {
+    static func dateOfLastLike(_ igp:SocialDataProcessor,likerID:String) throws -> String {
         
         if let t = igp.likersDict [likerID] {
             let idx  = t.postsBeforeLast,
@@ -100,27 +100,27 @@ struct  IGDateSupport {
             created = onepost.createdTime // as per IG spec
             return created
         }
-        throw SMaxxError.Bad(arg:918)
+        throw SMaxxError.bad(arg:918)
     }
     
-    static  func postOfLastLike(igp:SocialDataProcessor,likerID:String) throws ->  MediaData {
+    static  func postOfLastLike(_ igp:SocialDataProcessor,likerID:String) throws ->  MediaData {
         
         if let t = igp.likersDict [likerID] {
             let idx  = t.postsBeforeLast,
             onepost = igp.pd.ouMediaPosts[idx] as MediaData
             return onepost
         }
-        throw SMaxxError.Bad(arg:918)
+        throw SMaxxError.bad(arg:918)
     }
     
-    static  func postOfFirstLike(igp:SocialDataProcessor,likerID:String) throws -> MediaData {
+    static  func postOfFirstLike(_ igp:SocialDataProcessor,likerID:String) throws -> MediaData {
         
         if let t = igp.likersDict [likerID] {
             let idx  = t.postsBeforeFirst,
             onepost = igp.pd.ouMediaPosts[idx] as  MediaData
             return onepost
         }
-        throw SMaxxError.Bad(arg:919)
+        throw SMaxxError.bad(arg:919)
     }
     
     

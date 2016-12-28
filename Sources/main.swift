@@ -20,7 +20,7 @@
  **/
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import HeliumLogger
 import SwiftyJSON
 import LoggerAPI
@@ -65,7 +65,7 @@ class Sm {
         struct Axx { static let smg = Sm() }
         return Axx.smg
     }
-    let started = "\(NSDate())"
+    let started = "\(Date())"
     let baseURLString = "https://api.instagram.com"
     var packagename = "t5"
     var servertag = "-unassigned-"
@@ -77,8 +77,8 @@ class Sm {
     var title = "SocialMaxx@UnspecifiedSite"
     var ip = "127.0.0.1"
     var igApiCallCount = 0
-    var operationQueue: NSOperationQueue! // just one queue for now
-    var session: NSURLSession = NSURLSession(configuration: NSURLSessionConfiguration.default()) // just one session
+    var operationQueue: OperationQueue! // just one queue for now
+    var session: URLSession = URLSession(configuration: URLSessionConfiguration.default) // just one session
     
     func verificationToken () -> String {
         let x = ip.components(separatedBy: ".").joined(separator: "") // strip dots
@@ -87,29 +87,29 @@ class Sm {
     
     func status () -> JSONDictionary  {
         
-        let a : JSONDictionary  = [ "software-verision":version,
-                                        "instagram-api-url":baseURLString,
-                                "smaxx-server-ip":ip,
-                                 "packagename":packagename,
-                                 "servertag":servertag,
-                                 "portno":portno,
+        let a : JSONDictionary  = [ "software-verision":version as AnyObject,
+                                        "instagram-api-url":baseURLString as AnyObject,
+                                "smaxx-server-ip":ip as AnyObject,
+                                 "packagename":packagename as AnyObject,
+                                 "servertag":servertag as AnyObject,
+                                 "portno":portno as AnyObject,
                                 // "modes":modes,
-                                 "title":title,
-                                 "apicalls":igApiCallCount,
-                                 "started":started,
+                                 "title":title as AnyObject,
+                                 "apicalls":igApiCallCount as AnyObject,
+                                 "started":started as AnyObject,
                                 
                                  ]
         return a
     }
     
     init () {
-        operationQueue =  NSOperationQueue()
+        operationQueue =  OperationQueue()
         operationQueue.name = "InstagramOperationsQueue"   /// does not work with .main()
         operationQueue.maxConcurrentOperationCount = 3
     
     }
     
-    func setServer(servertag:String  ) {
+    func setServer(_ servertag:String  ) {
         Sm.axx.servertag =  servertag
         Sm.axx.ci = ciFor(servertag) 
     }
@@ -123,7 +123,7 @@ func startup_banner() {
 
     
     let apiurl = "https://api.ipify.org?format=json"
-    IGOps.perform_get_request(url_to_request: apiurl) { status,body  in
+    IGOps.perform_get_request(apiurl) { status,body  in
         if status == 200 {
             let jsonBody = JSON(data: body!)
             let ip = jsonBody["ip"].string
@@ -132,11 +132,11 @@ func startup_banner() {
             /// once we have an ip address we can
             /// setup subscription
             
-            Sm.axx.ci.make_subscription(myVerifyToken:Sm.axx.verificationToken())
+            Sm.axx.ci.make_subscription(Sm.axx.verificationToken())
             
             let t =  dict?["version"] ?? "vv??"
             
-            Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) \(t!) **********************")
+            Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) \(t) **********************")
             Log.info("** \(NSDate()) on \(Sm.axx.packagename) \(Sm.axx.ip):\( Sm.axx.portno) serving \( Sm.axx.modes.joined(separator: ","))")
             Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) **********************")
         }
@@ -150,7 +150,7 @@ func startup_banner() {
 
 /// command line arguments are xxx portno modes servertag title
 
-let arguments = NSProcessInfo.processInfo().arguments
+let arguments = ProcessInfo.processInfo.arguments
 guard arguments.count >= 5  else {
     
     // no args, use some reasonable defaults
@@ -169,7 +169,7 @@ guard arguments.count >= 5  else {
 
 Sm.axx.portno  =  Int(arguments[2]) ?? 8090
 Sm.axx.modes =  arguments[3].components(separatedBy: ",")
-Sm.axx.setServer(servertag: arguments[1])
+Sm.axx.setServer(arguments[1])
 Sm.axx.title =  arguments[4]
 
 
@@ -197,11 +197,12 @@ let router = Router()
 ///
 /// Setup routes - according to global modes setup from command line
 ///
-SMaxxRouter.setupRoutes( router: router)
+SMaxxRouter.setupRoutes( router)
+Kitura.addHTTPServer(onPort: Sm.axx.portno, with: router)
+Kitura.run()
 
-
-let server = HTTPServer.listen(port: Sm.axx.portno, delegate:router)
-
-Server.run()
+//let server = HTTPServer.listen(port: Sm.axx.portno, delegate:router)
+//
+//server.run()
 
 /// strangely, this runs off the bottom

@@ -23,16 +23,16 @@ struct Matrix {
         self.columns = columns
         grid = Array(repeating: 0.0,count: rows * columns)
     }
-    func indexIsValidForRow(row: Int, column: Int) -> Bool {
+    func indexIsValidForRow(_ row: Int, column: Int) -> Bool {
         return row >= 0 && row < rows && column >= 0 && column < columns
     }
     subscript(row: Int, column: Int) -> Double {
         get {
-            assert(indexIsValidForRow(row: row, column: column), "Index out of range")
+            assert(indexIsValidForRow(row, column: column), "Index out of range")
             return grid[(row * columns) + column]
         }
         set {
-            assert(indexIsValidForRow(row: row, column: column), "Index out of range")
+            assert(indexIsValidForRow(row, column: column), "Index out of range")
             grid[(row * columns) + column] = newValue
         }
     }
@@ -58,12 +58,12 @@ struct AlphaMatrix { // a matrix that has normalized all values 0..1 to be usefu
         return res
     }
     init(m:Matrix) {
-        func computeAlphas(m:Matrix)->(Matrix,Double,Double) {
+        func computeAlphas(_ m:Matrix)->(Matrix,Double,Double) {
             var res = Matrix(rows:m.rows,columns:m.columns)
             var maxval = 0.0
             var grandsum  = 0.0
             
-            func translateToAlphasByScaling(a:Double) -> Double {
+            func translateToAlphasByScaling(_ a:Double) -> Double {
                 return Double(a/maxval)
             }
             // frist figure grandsum and max
@@ -77,12 +77,12 @@ struct AlphaMatrix { // a matrix that has normalized all values 0..1 to be usefu
             for row in 0..<m.rows {
                 for col in 0..<m.columns {
                     let v = m[row,col]
-                    res[row,col] = translateToAlphasByScaling(a: v)
+                    res[row,col] = translateToAlphasByScaling(v)
                 }
             }
             return (res,grandsum,maxval)
         }
-        let (a,b,c) = computeAlphas(m: m)
+        let (a,b,c) = computeAlphas(m)
         self.maxv = c
         self.gs = b
         self.matrix = a

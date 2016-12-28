@@ -18,18 +18,18 @@ import Foundation
 //MARK: - Universal TypeDefs that work with SocialMaxx base data regardless of particular social networks
 ///
 
-typealias Intfunc = (Int->())
+typealias Intfunc = ((Int)->())
 typealias OptIntFunc = Intfunc?
 typealias BasicDict = [String : AnyObject]
 typealias OptDict = BasicDict?
 typealias URLParamsToEncode = OptDict
-typealias FilterFunc = (key:String,val:AnyObject)->Bool
+typealias FilterFunc = (_ key:String,_ val:AnyObject)->Bool
 typealias OptFilterFunc = FilterFunc?
-typealias NetCompletionFunc = (status: Int, object: AnyObject?) -> ()
+typealias NetCompletionFunc = (_ status: Int, _ object: AnyObject?) -> ()
 
 typealias IntCompletionFunc = (Int)->()
 typealias IntPlusOptDictCompletionFunc = (Int,OptDict)->()
-typealias PullIntCompletionFunc  = (SocialDataProcessor -> ())
+typealias PullIntCompletionFunc  = ((SocialDataProcessor) -> ())
 
 typealias BunchOfComments = [CommentData]
 typealias BunchOfMedia = [MediaData]
@@ -61,12 +61,12 @@ struct FreqCount {
 //MARK: - SocialDataProcessor ties together a SocialPerson with her persistent representation on disk and a processing pipeline that periodically updates the SocialPerson with regards to her social network(s)
 
 ///
-public class  SocialDataProcessor {
+open class  SocialDataProcessor {
     
     var targetID: String // represents the  userID for this SocialDataProcessor
     var targetAccessToken: String // the Instagram Access Token gets copied into here
     var pipeLineStatus = 200 //passes status from background up
-    var pipelineStart = NSDate()
+    var pipelineStart = Date()
     
     ///
     //MARK: - scratch storage that is not stored to persistent data Model
@@ -99,8 +99,8 @@ public class  SocialDataProcessor {
     }
 
     func figureLikesAndComments () { // used by many reports
-        likersDict = Instagram.dictOfAvLikersArossBunchOfMedia(posts: pd.ouMediaPosts)
-        commentersDict = Instagram.dictOfAvCommenteursArossBunchOfMedia(posts: pd.ouMediaPosts)
+        likersDict = Instagram.dictOfAvLikersArossBunchOfMedia(pd.ouMediaPosts)
+        commentersDict = Instagram.dictOfAvCommenteursArossBunchOfMedia(pd.ouMediaPosts)
         
     }
     func figureTags() { // used by tags based reports

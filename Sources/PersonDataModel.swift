@@ -36,9 +36,9 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
     }
     var ouVersion: String?
     // first time we created this user record / plist / model
-    var ouStartTime : NSDate?  //
+    var ouStartTime : Date?  //
     // last time we wrote ourselves to disk
-    var ouUpdateTime : NSDate! //
+    var ouUpdateTime : Date! //
     
     var ouTotalApiCount: Int = 0
     
@@ -72,8 +72,8 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
     
     func currently()->String {
         
-        let st = ouStartTime ?? NSDate(timeIntervalSince1970: 0.0)
-        let ut = ouUpdateTime ?? NSDate(timeIntervalSince1970: 0.0)
+        let st = ouStartTime ?? Date(timeIntervalSince1970: 0.0)
+        let ut = ouUpdateTime ?? Date(timeIntervalSince1970: 0.0)
         
         return "\n* v:\(ouVersion ?? "??") cr: \(st) lu:\(ut) \n* p:\(ouMediaPosts.count) f:\(ouAllFollowers.count) "
         //t:\(tagsFreqDict.count) tu:\(taggedUsersFreqDict.count) fil:\(filtersFreqDict.count)"
@@ -101,8 +101,8 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         // if still here, the version number on Disk matches what we expect from Info.plist
         
         ouTotalApiCount = aDecoder.decodeObject(forKey: "totalapicount") as? Int ?? 0
-        ouStartTime = aDecoder.decodeObject(forKey: "starttime") as?  NSDate
-        ouUpdateTime = aDecoder.decodeObject(forKey: "updatetime") as?  NSDate
+        ouStartTime = aDecoder.decodeObject(forKey: "starttime") as?  Date
+        ouUpdateTime = aDecoder.decodeObject(forKey: "updatetime") as?  Date
         ouUserInfo = aDecoder.decodeObject(forKey: "user") as? UserData
         ouRelationshipToEndUser = aDecoder.decodeObject(forKey: "status") as? RelationshipData
         ouMediaPosts = aDecoder.decodeObject(forKey: "posts") as? BunchOfMedia ?? []
@@ -127,9 +127,9 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         aCoder.encode(ouMinMediaPostID, forKey: "ouMinMediaPostID")
         aCoder.encode(ouMaxMediaPostID, forKey: "ouMaxMediaPostID")
     }
-    func savePd(userID:String) throws {
+    func savePd(_ userID:String) throws {
         
-        let start = NSDate()
+        let start = Date()
         ouUpdateTime = start
         if ouStartTime == nil {
             ouStartTime = ouUpdateTime
@@ -139,24 +139,24 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         }
         let tail = "/\(userID).smaxx"
         if  !NSKeyedArchiver.archiveRootObject(self, toFile:ModelData.membershipPath() + tail){
-            throw SMaxxError.CantWriteIGPersonDataFile(message: tail)
+            throw SMaxxError.cantWriteIGPersonDataFile(message: tail)
         } else {
-            let elapsed  =   "\(Int(NSDate().timeIntervalSince(start)*1000.0))ms"
+            let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
             print("  **************** Saved Person Data to ", tail, " in ",elapsed,
                   " ****************")
         }
     }
     
-    static func restore(userID:String) throws -> PersonData {
+    static func restore(_ userID:String) throws -> PersonData {
         let tail = "/\(userID).smaxx"
         do {
             if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:ModelData.membershipPath() + tail)  as? PersonData {
                 return pdx
             }
-            throw SMaxxError.CantDecodeIGPersonDataFile(message : tail)
+            throw SMaxxError.cantDecodeIGPersonDataFile(message : tail)
         }
         catch  {
-            throw  SMaxxError.CantRestoreIGPersonDataFile (message: tail)
+            throw  SMaxxError.cantRestoreIGPersonDataFile (message: tail)
         }
     }
 }

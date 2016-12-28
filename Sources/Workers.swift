@@ -14,17 +14,19 @@
 
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
 
+
+class Workers:NSObject {
 /// log error and reply with bad status to user
 func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
     do {
         let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
         Log.error("badrequest \(rqst)")
-        let item:JSONDictionary = mess != nil ? ["status":status,"description":mess!] as JSONDictionary :  ["status":status] as JSONDictionary
+        let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
         let r = response.status(HTTPStatusCode.badRequest)
         let _ =   try r.send(JSON(item).description).end()
         
@@ -46,8 +48,6 @@ func acceptgoodrequest(_ response:RouterResponse,item:JSONDictionary) {
         Log.error("Could not send acceptgoodrequest")
     }
 }
-
-class Workers:NSObject {
     
     let pipelineKey = "WorkersrIgPipeline"
     
@@ -57,22 +57,22 @@ class Workers:NSObject {
     
     var apiCallCountInitially = 0
     
-    private func igpipelineStart(igp:SocialDataProcessor, targetID:String, targetToken:String) {
+    fileprivate func igpipelineStart(_ igp:SocialDataProcessor, targetID:String, targetToken:String) {
         self.igDataEngine = IGDataEngine(forLoggedOnUser:  targetID, targetToken:targetToken, delegate: nil ) // the big IG Machine Structure with UI callbacks
         // this is triky cause the pipeline last op must be the object for the addoserver even though the pipeline isnt even started
-        let (firstop,lastop) = self.igDataEngine.setupPipeline (notifKey:pipelineKey,igp:igp) // returns (future) last op
-        NSNotificationCenter.default().addObserver(self, selector: #selector(Workers.igpipelineFinished), name: pipelineKey, object: lastop)
+        let (firstop,lastop) = self.igDataEngine.setupPipeline (pipelineKey,igp:igp) // returns (future) last op
+        NotificationCenter.default.addObserver(self, selector: #selector(Workers.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
  
-        self.igDataEngine.startPipeline(firstOp:firstop)
+        self.igDataEngine.startPipeline(firstop)
     }
     
     private  func igpipelineUpdateStart(igp:SocialDataProcessor, targetID:String, targetToken:String ) {
         self.igDataEngine = IGDataEngine(forLoggedOnUser:  targetID, targetToken:targetToken,  delegate: nil ) // the big IG Machine Structure with UI callbacks
         // this is triky cause the pipeline last op must be the object for the addoserver even though the pipeline isnt even started
-        let (firstop,lastop) = self.igDataEngine.setupUpdatePipeline (notifKey:pipelineKey,igp:igp) // returns (future) last op
+        let (firstop,lastop) = self.igDataEngine.setupUpdatePipeline (pipelineKey,igp:igp) // returns (future) last op
         //TODO needs to pass argument
-        NSNotificationCenter.default().addObserver(self, selector: #selector(Workers.igpipelineFinished), name: pipelineKey, object: lastop)
-        self.igDataEngine.startPipeline(firstOp:firstop)
+        NotificationCenter.default.addObserver(self, selector: #selector(Workers.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
+        self.igDataEngine.startPipeline(firstop)
     }
     
     /// comes here when pipeline final notification fires
@@ -80,7 +80,7 @@ class Workers:NSObject {
     func igpipelineFinished(not:NSNotification) {
         
         if let op = not.object as? FinalWrapUpOp {  // op.igp is not same as what we started with
-                NSNotificationCenter.default().removeObserver(self, name: self.pipelineKey, object: op)
+                NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: self.pipelineKey), object: op)
                 
                 // pick final status out of the igp
                 let errcode = op.igp.pipeLineStatus
@@ -109,13 +109,13 @@ class Workers:NSObject {
     
     func make_worker_for(id:String,token:String) {
         let igp =  SocialDataProcessor(id:id,token:token) // get fresh space from outside
-        igpipelineStart(igp:igp, targetID:id, targetToken:token)
+        igpipelineStart(igp, targetID:id, targetToken:token)
         
         activeWorkers[id] = id //keep trak - could fill with anything
     }
     
     func start(_ id: String , _ request:RouterRequest , _ response:RouterResponse) {
-        guard true == Membership.isMember(id: id) else {
+        guard true == Membership.isMember(id) else {
             rejectduetobadrequest(response,status:579,mess:"Bad id \(id) passed into SocialDataProcessor start")
             return
         }
@@ -131,7 +131,7 @@ class Workers:NSObject {
            
             
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")
-            let item : JSONDictionary = ["status":200,"workid":id,"workerid":"001", "newstate": "started" ]
+            let item : JSONDictionary = ["status":200 as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
             acceptgoodrequest(response,item:item )
             
             
@@ -146,7 +146,7 @@ class Workers:NSObject {
         activeWorkers.removeValue(forKey: id)
     }
     func stop(_ id: String, _ request:RouterRequest , _ response:RouterResponse) {
-        guard true == Membership.isMember(id: id) else {
+        guard true == Membership.isMember(id) else {
             rejectduetobadrequest(response,status:537,mess:"Bad id \(id) passed into SocialDataProcessor stop")
             return
         }
@@ -160,7 +160,7 @@ class Workers:NSObject {
         
         //TODO: really kill the task
         
-        let item :JSONDictionary = ["status":200, "workid":id,"workerid":"001", "newstate": "idle"  ]
+        let item :JSONDictionary = ["status":200 as AnyObject, "workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "idle" as AnyObject  ]
         
         acceptgoodrequest(response,item:item )
         stopcold(id: id)
@@ -177,13 +177,13 @@ extension SMaxxRouter{
         ///
         router.get("/workers/start/:id") {
             request, response, next in
-            guard let id = request.params["id"] else { return RestSupport.missingID(response) }
+            guard let id = request.parameters["id"] else { return RestSupport.missingID(response) }
             Sm.axx.workers.start(id,request, response)
             //next()
         }
         router.get("/workers/stop/:id") {
             request, response, next in
-            guard let id = request.params["id"] else { return RestSupport.missingID(response) }
+            guard let id = request.parameters["id"] else { return RestSupport.missingID(response) }
             Sm.axx.workers.stop(id,request, response)
             //next()
         }

@@ -13,7 +13,7 @@
 
 import Kitura
 import KituraNet
-import KituraSys
+//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
@@ -22,7 +22,7 @@ import Foundation
 /// A Persistent Class via Plist
 /// TODO: replace w Cloudant or similar
 
-public class Membership {
+open class Membership {
     
     ///
     /// the members are directly accessible via igID,
@@ -36,19 +36,19 @@ public class Membership {
         return Singleton.sharedMembership
     }
     
-    class func isMember(id:String) -> Bool {
+    class func isMember(_ id:String) -> Bool {
          if let _ = Membership.shared.members[id] {
             return true
         }
         return false 
     }
-    class func getMemberIDFromToken(token:String) throws -> String {
+    class func getMemberIDFromToken(_ token:String) throws -> String {
         for (_,member) in Membership.shared.members {
             if member["smaxx-token"] as! String  == token {
                 return member["id"] as! String
             }
         }
-      throw SMaxxError.Bad(arg: 577)
+      throw SMaxxError.bad(arg: 577)
     }
     class    func addMembership(_ request:RouterRequest , _ response:RouterResponse) {
         
@@ -59,27 +59,29 @@ public class Membership {
         //        }
         // Log.error ("post request has \(request.queryParams)")
         
-        let title = request.queryParams["title"] ?? "no title"
-        let id = request.queryParams["id"] ?? "no idr"
+        let title = request.queryParameters["title"] ?? "no title"
+        let id = request.queryParameters["id"] ?? "no idr"
         do {
             if Membership.shared.members[id] != nil {
                 // duplicate
-                let dict = ["status":539]  as  [String:AnyObject]
+                let dict = ["status":539 as AnyObject]  as  [String:AnyObject]
                 try response.status(HTTPStatusCode.OK).send(JSON(dict).description).end()
             } else {
                 
                 
                 // adjust membership table and save it to disk
-                Membership.shared.members[id] = ["id":id,"created":"\(NSDate())","named":title ]
+                Membership.shared.members[id] = ["id":id as AnyObject,"created":("\(Date())"  as AnyObject),
+                                                 "named":title as AnyObject ]  as AnyObject
+
                 
-                let dict = ["status":200, "data":Membership.shared.members] as  [String:AnyObject]
+                let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
                 
                 /// save entire pile
                 
                 try  Membership.save ("_membership",dict:dict)
                 //Log.info("saved membership state")
                 response.headers["Content-Type"] = "application/json; charset=utf-8"
-                try response.status(HTTPStatusCode.OK).send(JSON(["status":200] as  [String:AnyObject]).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(["status":200 as AnyObject] as  [String:AnyObject]).description).end()
             }
         }
         catch  {
@@ -92,7 +94,7 @@ public class Membership {
         do {
             Membership.shared.members[id] = nil
             
-            let dict = ["status":200, "data":Membership.shared.members] as  [String:AnyObject]
+            let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
             let jsonDict = JSON(dict )
             
             try  Membership.save ("_membership",dict:dict)
@@ -109,7 +111,7 @@ public class Membership {
         do {
               response.headers["Content-Type"] = "application/json; charset=utf-8"
             if let x = Membership.shared.members[id] {
-                let item = ["status":200,   "data": x ]
+                let item = ["status":200,   "data": x ] as [String : Any]
                 let r = response.status(HTTPStatusCode.OK)
                 let _ =   try r.send(JSON(item).description).end()
             }  else
@@ -117,7 +119,7 @@ public class Membership {
                 
                 let item = ["status":533]
                 let r = response.status(HTTPStatusCode.badRequest)
-                let _ =   try r.send(JSON(item).description).end().end()
+                let _ =   try r.send(JSON(item).description).end()
                // Log.error("Request has bad member id")
             }
         }
@@ -130,7 +132,7 @@ public class Membership {
         do {
             Membership.shared.members = [:]
             
-            let dict = ["status":200, "data":[:]] as  [String:AnyObject]
+            let dict = ["status":200 as AnyObject, "data":[:] as AnyObject] as  [String:AnyObject]
             let jsonDict = JSON(dict )
             
             try  Membership.save ("_membership",dict:dict)
@@ -158,7 +160,8 @@ public class Membership {
             }
             idx += 1
         }
-        let item = ["status":200, "limit":limit,"skip":skip,"data":[mems]]
+        
+        let item = ["status":200 as AnyObject, "limit":limit as AnyObject,"skip":skip as AnyObject,"data":[mems]  as AnyObject] as [String : AnyObject]
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             try response.status(HTTPStatusCode.OK).send(JSON(item).description).end()
@@ -173,16 +176,16 @@ public class Membership {
     
     ///
     /// restore from keyed archive plist
-    private class func restoreme(_ userID:String) throws -> [String:AnyObject] {
+    fileprivate class func restoreme(_ userID:String) throws -> [String:AnyObject] {
         let spec = ModelData.membershipPath() +  "\(userID).smaxx"
         do {
             if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?  [String:AnyObject] {
                 return pdx
             }
-            throw SMaxxError.CantDecodeMembership(message : spec )
+            throw SMaxxError.cantDecodeMembership(message : spec )
         }
         catch  {
-            throw  SMaxxError.CantRestoreMembership(message: spec )
+            throw  SMaxxError.cantRestoreMembership(message: spec )
         }
     }
     /// Restore state of membership
@@ -201,12 +204,12 @@ public class Membership {
     }
     /// save as keyed archive plist
    class func save (_ userID:String,dict:[String:AnyObject]) throws {
-        let start = NSDate()
+        let start = Date()
         let spec = ModelData.membershipPath() +  "\(userID).smaxx"
         if  !NSKeyedArchiver.archiveRootObject(dict, toFile:spec ){
-            throw SMaxxError.CantWriteMembership(message: spec )
+            throw SMaxxError.cantWriteMembership(message: spec )
         } else {
-            let elapsed  =   "\(Int(NSDate().timeIntervalSince(start)*1000.0))ms"
+            let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
              Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
         }
     }
@@ -214,7 +217,7 @@ public class Membership {
 }
 
 extension SMaxxRouter {
-    class func setupRoutesForMembership(router: Router ) {
+    class func setupRoutesForMembership(_ router: Router ) {
 
         
         ///
@@ -222,7 +225,7 @@ extension SMaxxRouter {
         ///
         router.get("/membership/:id") {
             request, response, next in
-            guard let id = request.params["id"] else { return RestSupport.missingID(response)  }
+            guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
             Membership.membershipForID(id,response)
             next()
         }
@@ -233,7 +236,7 @@ extension SMaxxRouter {
             request, response, next in
             
             Log.error("delete /membership/:id")
-            guard let id = request.params["id"] else { return RestSupport.missingID(response)  }
+            guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
             Membership.deleteMembershipForID(id,response)
             next()
         }
@@ -285,13 +288,13 @@ extension SMaxxRouter {
 
         
         router.get("/showlogin") { request, response, next in
-            Sm.axx.ci.STEP_ONE(response:response) // will redirect to IG
+            Sm.axx.ci.STEP_ONE(response) // will redirect to IG
             
             //next()
         }
         router.get("/authcallback") { request, response, next in
             // Log.error("/login/instagram will authenticate ")
-            Sm.axx.ci.STEP_TWO (request: request, response: response ) { status in
+            Sm.axx.ci.STEP_TWO (request, response: response ) { status in
                 if status != 200 { Log.error("Back from STEP_TWO status \(status) ") }
             }
             
@@ -299,15 +302,15 @@ extension SMaxxRouter {
         }
         router.get("/unwindor") { request, response, next in
             // just a means of unwinding after login , with data passed via queryparam
-            Sm.axx.ci.STEP_THREE (request: request, response: response )
+            Sm.axx.ci.STEP_THREE (request, response: response )
             do {
                 
-                let id = request.queryParams["smaxx-id"] ?? "no id"
-                let smtoken = request.queryParams["smaxx-token"] ?? "no smtoken"
-                let name = request.queryParams["smaxx-name"] ?? "no smname" 
-                let pic = request.queryParams["smaxx-pic"] ?? "no smpic"
+                let id = request.queryParameters["smaxx-id"] ?? "no id"
+                let smtoken = request.queryParameters["smaxx-token"] ?? "no smtoken"
+                let name = request.queryParameters["smaxx-name"] ?? "no smname"
+                let pic = request.queryParameters["smaxx-pic"] ?? "no smpic"
                 response.headers["Content-Type"] = "application/json; charset=utf-8"
-                try response.status(HTTPStatusCode.OK).send(JSON(["status":200,"smaxx-id":id, "smaxx-pic":pic,"smaxx-token":smtoken,"smaxx-name":name] as  [String:AnyObject]).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(["status":200 as AnyObject,"smaxx-id":id as AnyObject, "smaxx-pic":pic as AnyObject,"smaxx-token":smtoken as AnyObject,"smaxx-name":name as AnyObject] as  [String:AnyObject]).description).end()
             }
             catch {
                 Log.error("Failed /authcallback redirect \(error)")
