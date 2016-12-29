@@ -217,12 +217,12 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             if let pdxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
                 //Log.error(" Report:\(reportname) found user \(id) on disk ")
                 ThePdCache[path] = pdxx // add this to the cache
-                pdx = pdxx //
+                pdx = pdxx ////
             }
         }
         } // forced bypass
         
-        if pdx != nil {
+        if pdx != nil {///
             
             // setup context for report
        let sdp = SocialDataProcessor(id:id,token:token) // wtf?
