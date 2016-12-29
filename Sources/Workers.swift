@@ -20,7 +20,7 @@ import SwiftyJSON
 import Foundation
 
 
-class Workers:NSObject {
+open class Workers:NSObject {
 /// log error and reply with bad status to user
 func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
     do {
@@ -116,23 +116,23 @@ func acceptgoodrequest(_ response:RouterResponse,item:JSONDictionary) {
     
     func start(_ id: String , _ request:RouterRequest , _ response:RouterResponse) {
         guard true == Membership.isMember(id) else {
-            rejectduetobadrequest(response,status:579,mess:"Bad id \(id) passed into SocialDataProcessor start")
+            rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor start")
             return
         }
         // ensure not active
         if let _ =  activeWorkers[id]  {
-            rejectduetobadrequest(response,status:539,mess:"Worker id \(id) is already active")
+            rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Worker id \(id) is already active")
             return
         }
         // member must have access token for instagram api access
         if    let token = Membership.getTokenFromID(id: id) {
             make_worker_for(id: id, token: token)
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")
-            let item : JSONDictionary = ["status":200 as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
+            let item : JSONDictionary = ["status":SMaxxResponseCode.success  as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
             acceptgoodrequest(response,item:item )
         }
         else {
-            rejectduetobadrequest(response,status:571,mess:"Worker id \(id) has no access token")
+            rejectduetobadrequest(response,status:SMaxxResponseCode.noToken.rawValue,mess:"Worker id \(id) has no access token")
         }
         
     }
@@ -142,12 +142,12 @@ func acceptgoodrequest(_ response:RouterResponse,item:JSONDictionary) {
     }
     func stop(_ id: String, _ request:RouterRequest , _ response:RouterResponse) {
         guard true == Membership.isMember(id) else {
-            rejectduetobadrequest(response,status:537,mess:"Bad id \(id) passed into SocialDataProcessor stop")
+            rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor stop")
             return
         }
         // ensure  active
         guard let _ =  activeWorkers[id] else {
-            rejectduetobadrequest(response,status:538,mess:"Worker id \(id) not  active")
+            rejectduetobadrequest(response,status:SMaxxResponseCode.workerNotActive.rawValue,mess:"Worker id \(id) not  active")
             return
         }
         
@@ -155,7 +155,7 @@ func acceptgoodrequest(_ response:RouterResponse,item:JSONDictionary) {
         
         //TODO: really kill the task
         
-        let item :JSONDictionary = ["status":200 as AnyObject, "workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "idle" as AnyObject  ]
+        let item :JSONDictionary = ["status":SMaxxResponseCode.success as AnyObject, "workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "idle" as AnyObject  ]
         
         acceptgoodrequest(response,item:item )
         stopcold(id: id)

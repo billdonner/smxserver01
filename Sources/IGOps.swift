@@ -15,6 +15,8 @@ import Foundation
 
 /// Upper level interface to Instagram API Operations
 
+typealias BOPCompletionFunc = (IGUserBlock)->()
+typealias BOMCompletionFunc = (IGMediaBlock)->()
 struct IGOps {
     /// this is good for a one shot get to anywhere
     static func perform_get_request(_ url_to_request: String,  completion:@escaping (Int,Data?)->())

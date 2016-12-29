@@ -90,7 +90,7 @@ struct  IGDateSupport {
             created = onepost.createdTime // as per IG spec
             return created
         }
-        throw SMaxxError.bad(arg:917)
+        throw SMaxxError.noLikersWithID
     }
     static func dateOfLastLike(_ igp:SocialDataProcessor,likerID:String) throws -> String {
         
@@ -100,7 +100,7 @@ struct  IGDateSupport {
             created = onepost.createdTime // as per IG spec
             return created
         }
-        throw SMaxxError.bad(arg:918)
+        throw SMaxxError.noLikersWithID
     }
     
     static  func postOfLastLike(_ igp:SocialDataProcessor,likerID:String) throws ->  MediaData {
@@ -110,7 +110,7 @@ struct  IGDateSupport {
             onepost = igp.pd.ouMediaPosts[idx] as MediaData
             return onepost
         }
-        throw SMaxxError.bad(arg:918)
+        throw SMaxxError.noLikersWithID
     }
     
     static  func postOfFirstLike(_ igp:SocialDataProcessor,likerID:String) throws -> MediaData {
@@ -120,7 +120,7 @@ struct  IGDateSupport {
             onepost = igp.pd.ouMediaPosts[idx] as  MediaData
             return onepost
         }
-        throw SMaxxError.bad(arg:919)
+        throw SMaxxError.noLikersWithID
     }
     
     

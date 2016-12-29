@@ -20,6 +20,11 @@ import Foundation
 import SwiftyJSON
 
 
+typealias ParseIgJSONIgPeopleFunc  = (URL?,BunchOfIGPeople)->()
+typealias ParseIgJSONIgMediaFunc  = (URL?,BunchOfIGMedia)->()
+typealias ParseIgJSONOAuthFunc  = (String,String)->()
+typealias ParseIgJSONDictFunc  = (Int,BasicDict)->()
+
 struct IGJSON {
     
     static func parseIgJSONIgPeople(_ jsonObject:AnyObject,f1:ParseIgJSONIgPeopleFunc ) {

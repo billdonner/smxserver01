@@ -1,46 +1,10 @@
-///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
-///
 
 
 //  Moved to Kitura on 5/4/16
 //  Instagram.swift
-//ok
-//  moved non-IG stuff to OUdata on 5/11
 import Foundation
 
-typealias IGAnyBlock = [String:AnyObject]// NSDictionary
-typealias IGStatusBlock = IGAnyBlock
-typealias IGMediaBlock = IGAnyBlock
-typealias IGUserBlock = IGAnyBlock
 
-typealias BunchOfIGMedia = [IGMediaBlock]
-typealias BunchOfIGPeople = [IGUserBlock]
-typealias BOPCompletionFunc = (IGUserBlock)->()
-typealias BOMCompletionFunc = (IGMediaBlock)->()
-
-typealias ParseIgJSONIgPeopleFunc  = (URL?,BunchOfIGPeople)->()
-typealias ParseIgJSONIgMediaFunc  = (URL?,BunchOfIGMedia)->()
-typealias ParseIgJSONOAuthFunc  = (String,String)->()
-typealias ParseIgJSONDictFunc  = (Int,BasicDict)->()
-typealias FollowersSortFunc = (_ user1: UserData ,_ user2: UserData  ) -> Bool
-typealias BattleSortFunc = (_ a: UserData ,_ b: UserData ) -> Bool
-
-
-enum SMaxxError: Error {
-    case noID
-    case bad (arg:Int)
-    case failedToLoadDataFromURL(url : String)
-    case cantDecodeIGPersonDataFile(message: String)
-    case cantRestoreIGPersonDataFile(message: String)
-    case cantWriteIGPersonDataFile(message: String)
-    case cantWriteMembership(message: String)
-    case cantRestoreMembership(message: String)
-    case cantDecodeMembership(message: String)
-    case noAccessTokenForUser(id: String)
-    
-}
 
 struct Instagram {
     

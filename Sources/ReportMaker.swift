@@ -90,7 +90,7 @@ open class ReportMaker {
     class   func reportsAvailable(_ response:RouterResponse) {
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
-            let item = ["status":200,   "data": reportsDict() ] as [String : Any]
+            let item = ["status":SMaxxResponseCode.success ,   "data": reportsDict() ] as [String : Any]
             let r = response.status(HTTPStatusCode.OK)
             let _ =   try r.send(JSON(item).description).end()
         }
@@ -104,7 +104,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             // ensure its a valid report anme
             guard let reportname = request.parameters["reportname"] else {
-                let item = ["status":533]
+                let item = ["status":SMaxxResponseCode.badMemberID]
                 let r = response.status(HTTPStatusCode.badRequest)
                 let _ =   try r.send(JSON(item).description).end()
                 Log.error("No Report Name")
@@ -133,14 +133,14 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
                 }
             }
             
-            let item = data.count == 0 ? ["status":541] : ["status":200,"request":rqst, "response": data ]
+            let item = data.count == 0 ? ["status":SMaxxResponseCode.noData] : ["status":SMaxxResponseCode.success ,"request":rqst, "response": data ]
             let r = response.status(HTTPStatusCode.OK)
             let _ =   try r.send(JSON(item).description).end()
                   return
             } // has access token
             else {
                 // no token
-                let item =  ["status":545]
+                let item =  ["status":SMaxxResponseCode.noToken]
                 let r = response.status(HTTPStatusCode.badRequest)
                 let _ =   try r.send(JSON(item).description).end()
                 return
@@ -151,7 +151,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
         }
             //should never get here
     // no token
-    let item =  ["status":546]
+    let item =  ["status":SMaxxResponseCode.noToken]
     let r = response.status(HTTPStatusCode.badRequest)
     let _ =   try! r.send(JSON(item).description).end()
     return
@@ -266,7 +266,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
                 }
                 
                 let thereport:JSONDictionary = [
-                                                 "report-status":200 as AnyObject,
+                                                 "report-status":SMaxxResponseCode.success  as AnyObject,
                             "title":reportname as AnyObject,
                             "kind":gkind.description() as AnyObject,
                             "report-header" : reporthead as AnyObject,"report-body":body as AnyObject]
@@ -275,7 +275,7 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
         }
          Log.error("Report:\(reportname) awaiting user \(id) full setup")
         let thereport2:JSONDictionary = [
-                                       "report-status":541 as AnyObject, // shud trigger a re-ask soon 
+                                       "report-status":SMaxxResponseCode.waiting as AnyObject, // shud trigger a re-ask soon
                                        "userid":id as AnyObject,
                                        "description":"user initialization not finished yet" as AnyObject]
         return thereport2 // no data will generat a 541 back

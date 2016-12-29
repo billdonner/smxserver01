@@ -14,13 +14,47 @@
 
 import Foundation
 
+typealias BasicDict = [String : AnyObject]
+typealias IGAnyBlock = BasicDict
+typealias IGStatusBlock = IGAnyBlock
+typealias IGMediaBlock = IGAnyBlock
+typealias IGUserBlock = IGAnyBlock
+
+typealias BunchOfIGMedia = [IGMediaBlock]
+typealias BunchOfIGPeople = [IGUserBlock]
+
+enum SMaxxResponseCode: Int {
+    case success = 200
+    case workerNotActive = 538
+    case duplicate = 539
+    case badMemberID = 533
+    case noData = 541
+    case waiting = 542
+    case noToken = 545
+}
+
+enum SMaxxError: Error {
+    case noID
+    case noLikersWithID
+    case noMemberFromToken
+    case bad (arg:Int)
+    case failedToLoadDataFromURL(url : String)
+    case cantDecodeIGPersonDataFile(message: String)
+    case cantRestoreIGPersonDataFile(message: String)
+    case cantWriteIGPersonDataFile(message: String)
+    case cantWriteMembership(message: String)
+    case cantRestoreMembership(message: String)
+    case cantDecodeMembership(message: String)
+    case noAccessTokenForUser(id: String)
+    
+}
+
 ///
 //MARK: - Universal TypeDefs that work with SocialMaxx base data regardless of particular social networks
 ///
 
 typealias Intfunc = ((Int)->())
 typealias OptIntFunc = Intfunc?
-typealias BasicDict = [String : AnyObject]
 typealias OptDict = BasicDict?
 typealias URLParamsToEncode = OptDict
 typealias FilterFunc = (_ key:String,_ val:AnyObject)->Bool
@@ -49,6 +83,7 @@ typealias TaggedUsersDict = [String:String]
 
 struct AvLikerContext { var count:Int, postsBeforeFirst:Int,postsBeforeLast:Int,user: UserData }
 struct StringLikerContext { var count:Int,likerTotal:Int,postsBeforeFirst:Int,postsBeforeLast:Int,val:String }
+
 typealias AnalysisBlock = [String:AvLikerContext]
 typealias StringAnalysisBlock = [String:StringLikerContext]
 

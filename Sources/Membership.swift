@@ -23,7 +23,6 @@ import Foundation
 /// TODO: replace w Cloudant or similar
 
 open class Membership {
-    
     ///
     /// the members are directly accessible via igID,
 
@@ -67,7 +66,7 @@ open class Membership {
                 return member["id"] as! String
             }
         }
-      throw SMaxxError.bad(arg: 577)
+      throw SMaxxError.noMemberFromToken
     }
     class    func addMembership(_ request:RouterRequest , _ response:RouterResponse) {
         
@@ -83,7 +82,7 @@ open class Membership {
         do {
             if Membership.shared.members[id] != nil {
                 // duplicate
-                let dict = ["status":539 as AnyObject]  as  [String:AnyObject]
+                let dict = ["status":SMaxxResponseCode.duplicate  as AnyObject]  as  [String:AnyObject]
                 try response.status(HTTPStatusCode.OK).send(JSON(dict).description).end()
             } else {
                 
@@ -93,14 +92,14 @@ open class Membership {
                                                  "named":title as AnyObject ]  as AnyObject
 
                 
-                let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
+                let dict = ["status":SMaxxResponseCode.success as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
                 
                 /// save entire pile
                 
                 try  Membership.save ("_membership",dict:dict)
                 //Log.info("saved membership state")
                 response.headers["Content-Type"] = "application/json; charset=utf-8"
-                try response.status(HTTPStatusCode.OK).send(JSON(["status":200 as AnyObject] as  [String:AnyObject]).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(["status":SMaxxResponseCode.success  as AnyObject] as  [String:AnyObject]).description).end()
             }
         }
         catch  {
@@ -113,7 +112,7 @@ open class Membership {
         do {
             Membership.shared.members[id] = nil
             
-            let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
+            let dict = ["status":SMaxxResponseCode.success  as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
             let jsonDict = JSON(dict )
             
             try  Membership.save ("_membership",dict:dict)
@@ -130,13 +129,13 @@ open class Membership {
         do {
               response.headers["Content-Type"] = "application/json; charset=utf-8"
             if let x = Membership.shared.members[id] {
-                let item = ["status":200,   "data": x ] as [String : Any]
+                let item = ["status":SMaxxResponseCode.success ,   "data": x ] as [String : Any]
                 let r = response.status(HTTPStatusCode.OK)
                 let _ =   try r.send(JSON(item).description).end()
             }  else
             {
                 
-                let item = ["status":533]
+                let item = ["status":  SMaxxResponseCode.badMemberID] 
                 let r = response.status(HTTPStatusCode.badRequest)
                 let _ =   try r.send(JSON(item).description).end()
                // Log.error("Request has bad member id")
@@ -151,7 +150,7 @@ open class Membership {
         do {
             Membership.shared.members = [:]
             
-            let dict = ["status":200 as AnyObject, "data":[:] as AnyObject] as  [String:AnyObject]
+            let dict = ["status":SMaxxResponseCode.success  as AnyObject, "data":[:] as AnyObject] as  [String:AnyObject]
             let jsonDict = JSON(dict )
             
             try  Membership.save ("_membership",dict:dict)
@@ -180,7 +179,7 @@ open class Membership {
             idx += 1
         }
         
-        let item = ["status":200 as AnyObject, "limit":limit as AnyObject,"skip":skip as AnyObject,"data":[mems]  as AnyObject] as [String : AnyObject]
+        let item = ["status":SMaxxResponseCode.success  as AnyObject, "limit":limit as AnyObject,"skip":skip as AnyObject,"data":[mems]  as AnyObject] as [String : AnyObject]
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             try response.status(HTTPStatusCode.OK).send(JSON(item).description).end()
@@ -236,14 +235,13 @@ open class Membership {
 }
 
 extension SMaxxRouter {
-    class func setupRoutesForMembership(_ router: Router ) {
-
-        
+     class func setupRoutesForMembership(_ router: Router ) {
+       
         ///
         // MARK:- Membership tracks who has the app and has consented to our terms
         ///
         router.get("/membership/:id") {
-            request, response, next in
+            request, response, next -> () in
             guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
             Membership.membershipForID(id,response)
             next()
@@ -285,27 +283,7 @@ extension SMaxxRouter {
             Membership.deleteMembership(request,response)
             next()
         }
-        
- 
-        
-        
-        
-        ///
-        // MARK:- Hack Login to Instagram
-        ///
-//        router.get("/login") { request, response, next in
-//            response.headers["Content-Type"] = "text/html; charset=utf-8"
-//            do {
-//                try response.status(.OK).send(
-//                    "<!DOCTYPE html><html><body>" +
-//                        "<a href=/authcallback>Log In with Instagram</a><br>" +
-//                    "</body></html>\n\n").end()
-//            }
-//            catch {}
-//            next()
-//        }
 
-        
         router.get("/showlogin") { request, response, next in
             Sm.axx.ci.STEP_ONE(response) // will redirect to IG
             
@@ -329,7 +307,7 @@ extension SMaxxRouter {
                 let name = request.queryParameters["smaxx-name"] ?? "no smname"
                 let pic = request.queryParameters["smaxx-pic"] ?? "no smpic"
                 response.headers["Content-Type"] = "application/json; charset=utf-8"
-                try response.status(HTTPStatusCode.OK).send(JSON(["status":200 as AnyObject,"smaxx-id":id as AnyObject, "smaxx-pic":pic as AnyObject,"smaxx-token":smtoken as AnyObject,"smaxx-name":name as AnyObject] as  [String:AnyObject]).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(["status":SMaxxResponseCode.success  as AnyObject,"smaxx-id":id as AnyObject, "smaxx-pic":pic as AnyObject,"smaxx-token":smtoken as AnyObject,"smaxx-name":name as AnyObject] as  [String:AnyObject]).description).end()
             }
             catch {
                 Log.error("Failed /authcallback redirect \(error)")
@@ -382,7 +360,7 @@ extension Membership {
                 
                 ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
                 /// adjust membership table and save it to disk
-                let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
+                let dict = ["status":SMaxxResponseCode.success  as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
                 /// save entire pile
                 try  Membership.save ("_membership",dict:dict)
                 //Log.info("saved membership state")
@@ -394,6 +372,21 @@ extension Membership {
         }
         return ret
     }
-
-    
 }
+
+///
+// MARK:- Hack Login to Instagram
+///
+//        router.get("/login") { request, response, next in
+//            response.headers["Content-Type"] = "text/html; charset=utf-8"
+//            do {
+//                try response.status(.OK).send(
+//                    "<!DOCTYPE html><html><body>" +
+//                        "<a href=/authcallback>Log In with Instagram</a><br>" +
+//                    "</body></html>\n\n").end()
+//            }
+//            catch {}
+//            next()
+//        }
+
+        
