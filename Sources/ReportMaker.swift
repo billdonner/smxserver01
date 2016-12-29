@@ -112,20 +112,17 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             }
             //getMemberIDFromToken
             let memberid = try Membership.getMemberIDFromToken(token) //throws
-            
-    
        
-            // member must have access token for report generation
-            if    let mem = Membership.shared.members[memberid],
-                    let mtoken = mem["access_token"] as? String,
-            
-            let smtoken = mem[  "smaxx-token"] as? String, smtoken == token {
+            let (mtoken,smtoken) = Membership.getTokensFromID(id: memberid)
+            // member must have access token for report generation 
+            if let smtoken = smtoken,
+                   smtoken == token {
             
             let (limit,skip) = reportOptions(request)
             
             var rqst : JSONDictionary = ["error":"inconsistency" as AnyObject]
             
-            let data = ReportMaker.generate_and_send_report(id,token:mtoken,reportname:reportname,limit:limit,skip:skip,bypasscache: true)
+            let data = ReportMaker.generate_and_send_report(id,token:mtoken!,reportname:reportname,limit:limit,skip:skip,bypasscache: true)
             
             // echo the request
             if let (gkind,_) =  ReportMaker.reportfuncs[reportname]{

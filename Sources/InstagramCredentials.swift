@@ -44,7 +44,7 @@ open class InstagramCredentials {
     }
     /// make subscripyion
     open func make_subscription (_ myVerifyToken:String) {
-        print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
+        //print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
         IGOps.perform_post_request("https://api.instagram.com/v1/subscriptions/",
                                    paramString: "client_id=\(clientId)&client_secret=\(clientSecret)" +
                                     "&object=user&aspect=media&verify_token=\(myVerifyToken)&callback_url=\(self.callbackPostUrl)",completion:
@@ -77,8 +77,7 @@ open class InstagramCredentials {
         }
         Log.verbose("---->>>>  post callback for user  \(userid)")
         // member must have access token for instagram api access
-        if    let mem = Membership.shared.members[userid],
-            let token = mem["access_token"] as? String {
+        if    let token = Membership.getTokenFromID(id: userid) {
             Sm.axx.workers.make_worker_for(id: userid, token: token)
         }
     }
@@ -114,9 +113,7 @@ open class InstagramCredentials {
                 }
             }
         }
-    }// get  callback
-    
-    
+    }// get  callbac
     
     /// OAuth2 steps with Instagram
     
@@ -141,56 +138,26 @@ open class InstagramCredentials {
             IGOps.perform_post_request("https://api.instagram.com/oauth/access_token",
                                        paramString: "client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
-                if status == 200 {
-                    let jsonBody = JSON(data: body!)
-                    if let token = jsonBody["access_token"].string,
-                        let userid = jsonBody["user"]["id"].string,
-                        let pic = jsonBody["user"]["profile_picture"].string,
-                        let title = jsonBody["user"]["username"].string {
-                        //   Log.info("STEP_TWO Instagram sent back \(token) and \(title)")
-                        /// stash these, creating new object if needed
-                        do {
-                            let smtoken = "\((userid + token).hashValue)"
-                            let nows = "\(NSDate())" // time now as string
-                            let mu = Membership.shared.members[userid]
-                            if mu != nil {
-                                // already there, just update last login time
-                                if let created = mu!["created"] as? String {
-                                    Membership.shared.members[userid] = ["id":userid  as AnyObject,"created":created as AnyObject,"last-login":nows as AnyObject, "named":title as AnyObject,  "pic":pic  as AnyObject,"access_token":token  as AnyObject,"smaxx-token":smtoken  as AnyObject] as AnyObject
-                                    // error
-                                    Log.error("Could not find created field in mu")
-                                }
-                            } else {
-                                // not there make new
-                                Membership.shared.members[userid] = ["id":userid  as AnyObject,"created":nows  as AnyObject,"last-login":nows  as AnyObject, "named":title  as AnyObject, "pic":pic  as AnyObject,"access_token":token  as AnyObject,"smaxx-token":smtoken   as AnyObject]  as [String:AnyObject] as AnyObject
-                            }
-                            
-                            ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
-                            /// adjust membership table and save it to disk
-                            let dict = ["status":200 as AnyObject, "data":Membership.shared.members as AnyObject] as  [String:AnyObject]
-                            /// save entire pile
-                            try  Membership.save ("_membership",dict:dict)
-                            //Log.info("saved membership state")
-                            let w = Sm.axx.workers
-                            w.make_worker_for(id:userid,token:token)
-                            // w.start(userid,request,response)
-                            // see if we can go somewhere interesting
-                            
-                            let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
-                            do {
-                                //  Log.info("STEP_TWO redirect back to client with \(tk)")
-                                try response.redirect(tk)  }
-                            catch {
-                                Log.error("Could not redirect to \(tk)")
-                            }
-                        }
-                        catch  {
-                            Log.error("Could not save membership")
-                        }
-                    }
+                if let body = body ,  status == 200  {
+                    
+                    let( userid , token, smtoken, title, pic ) = Membership.processInstagramResponse (body: body)
+            
+                    let w = Sm.axx.workers
+                    w.make_worker_for(id:userid,token:token)
+                    // w.start(userid,request,response)
+                    // see if we can go somewhere interesting
+                    
+                    let tk = "/unwindor?smaxx-id=\(userid)&smaxx-token=\(smtoken)&smaxx-name=\(title)&smaxx-pic=\(pic)"
+                    do {
+                        //  Log.info("STEP_TWO redirect back to client with \(tk)")
+                        try response.redirect(tk)  }
+                    catch {
+                        Log.error("Could not redirect to \(tk)")
+                    } 
                     completion?(200)
-                    return
-                } //==200
+                
+                
+                }//==200
                 else {
                     Log.error("Bad Status From Instagram   \(status)")
                     completion?(status)
@@ -203,7 +170,6 @@ open class InstagramCredentials {
         if let error = request.queryParameters["error"] {
             let error_reason = request.queryParameters["error_reason"]
             let error_description = request.queryParameters["error_description"]
-            
             Log.error("Instagram error \(error) and \(error_reason) - \(error_description)")
         } else
             if let code = request.queryParameters["code"] {
@@ -212,11 +178,11 @@ open class InstagramCredentials {
                 }
                 inner_two(code)
         }
-        
     }// end of step two
     
     /// redirect back from IG from the unwindor path
     open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
     }
-}
+    
+   }

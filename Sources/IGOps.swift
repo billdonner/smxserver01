@@ -66,12 +66,8 @@ struct IGOps {
     
     
     static func get_token_for_member(_ targetID:String) throws -> String  {
-        
-        ///
-        /// TODO: migrate to remote procedure call to Membership server
-        ///
-        if    let mem = Membership.shared.members[targetID],
-            let token = mem["access_token"] as? String {
+  
+        if let token = Membership.getTokenFromID(id: targetID) {
             return token
         }
         throw  SMaxxError.noAccessTokenForUser(id: targetID)

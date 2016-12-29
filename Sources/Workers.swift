@@ -125,16 +125,11 @@ func acceptgoodrequest(_ response:RouterResponse,item:JSONDictionary) {
             return
         }
         // member must have access token for instagram api access
-        if    let mem = Membership.shared.members[id],
-            let token = mem["access_token"] as? String {
-            make_worker_for(id: id, token: token) 
-           
-            
+        if    let token = Membership.getTokenFromID(id: id) {
+            make_worker_for(id: id, token: token)
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")
             let item : JSONDictionary = ["status":200 as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
             acceptgoodrequest(response,item:item )
-            
-            
         }
         else {
             rejectduetobadrequest(response,status:571,mess:"Worker id \(id) has no access token")

@@ -12,10 +12,12 @@
 //
 
 import Foundation
+
 ///
 //MARK:- Persistent Comment Data
 ///
- @objc(CommentData)
+// @objc(CommentData)
+
 class CommentData :NSObject ,NSCoding{
     // var comment: String = ""
     var timestamp : String = ""
@@ -38,10 +40,12 @@ class CommentData :NSObject ,NSCoding{
         aCoder.encode(commenter, forKey: "commenter")
     }
 }
+
 ///
 //MARK:- Persistent Relationship Data
 ///
- @objc(RelationshipData)
+// @objc(RelationshipData)
+
 class RelationshipData :NSObject ,NSCoding{
     var incoming: String = ""
     var outgoing : String = ""
@@ -64,10 +68,12 @@ class RelationshipData :NSObject ,NSCoding{
         aCoder.encode(privacy, forKey: "isprivate")
     }
 }
+
 ///
 //MARK:- Persistent User Data
 ///
- @objc(UserData)
+// @objc(UserData)
+
 class UserData :NSObject ,NSCoding{
     
     // from instagram
@@ -101,10 +107,12 @@ class UserData :NSObject ,NSCoding{
         aCoder.encode(igCounts, forKey: "igcounts")
     }
 }
+
 ///
 //MARK:- Persistent Media Data
 ///
- @objc(MediaData)
+//@objc(MediaData)
+
 class MediaData:NSObject,NSCoding  { // keep the likers attached to the media they like
     var id : String = ""
     var createdTime: String = "" // per IG Specs
@@ -128,9 +136,7 @@ class MediaData:NSObject,NSCoding  { // keep the likers attached to the media th
         caption = aDecoder.decodeObject(forKey: "caption") as? String ?? ""
         thumbPic = aDecoder.decodeObject(forKey: "thumbPic") as? String ?? ""
         standardPic = aDecoder.decodeObject(forKey: "standardPic") as? String ?? ""
-        
         userHasLiked = aDecoder.decodeObject(forKey: "userHasLiked") as? Bool ?? false
-        
         igLikeCount = aDecoder.decodeObject(forKey: "igLikeCount") as? Int ?? 0
         likers = aDecoder.decodeObject(forKey: "likers") as! PeopleDict
         comments = aDecoder.decodeObject(forKey: "comments") as! CommentsDict
