@@ -22,6 +22,57 @@ import Foundation
     public typealias OptionValue = AnyObject
 #endif
 
+struct AppResponses {
+/// log error and reply with bad status to user
+static func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
+    do {
+        let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
+        Log.error("badrequest \(rqst)")
+        let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
+        try sendbadresponse(response, item)
+        
+    }
+    catch {
+        Log.error("Could not send rejectduetobadrequest ")
+    }
+}
+static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
+    do {
+        let  item =   ["status":code as AnyObject]
+        try sendgooresponse(response,item )
+        
+        //Log.error("Did send acceptgoodrequest")
+        
+    }
+    catch {
+        Log.error("Could not send acceptgoodrequest")
+    }
+}
+static func sendgooresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws {
+    // item:JSONDictionary) {
+    do {
+        
+        let r = response.status(HTTPStatusCode.OK)
+        let _ =   try r.send(JSON(item).description).end()
+        //Log.error("Did send acceptgoodrequest")
+    }
+    catch {
+        Log.error("Could not send acceptgoodrequest")
+    }
+}
+static func sendbadresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws { // item:JSONDictionary) {
+    do {
+        
+        let r = response.status(HTTPStatusCode.badRequest)
+        let _ =   try r.send(JSON(item).description).end()
+    }
+    catch {
+        Log.error("Could not send sendbadresponse")
+    }
+}
+
+}
+
 ///
 // MARK:- Custom middleware that allows Cross Origin HTTP requests
 // This will allow 3rd party servers to communicate with this server
@@ -59,12 +110,13 @@ class BasicAuthMiddleware: RouterMiddleware {
 
 open class SMaxxRouter {
     
-          class func setupRoutes(_ router: Router) {
+          class func setupRoutesPlain(_ router: Router) {
         //
         // the server can run in several different flavours as determined by the routes that are setup
         //  the flavors are passed in from the original kitura startup command line
         
-        let flavors = Sm.axx.modes
+            
+            print("*** setting up Plain Pages and IG Callbacks ***")
         
         router.all(middleware: BasicAuthMiddleware())
         router.all("/*", middleware: BodyParser())
@@ -85,16 +137,7 @@ open class SMaxxRouter {
             response.status(HTTPStatusCode.OK)
             next()
         }
-        
-        if flavors.contains("reports") {
-            SMaxxRouter.setupRoutesForReports(router )
-        }
-        if flavors.contains("membership") {
-            SMaxxRouter.setupRoutesForMembership(router )
-        }
-        if flavors.contains("workers") {
-            SMaxxRouter.setupRoutesForWorkers(router: router )
-        }
+
             
 //            router.get("/authcallback") { request, response, next in
 //                response.headers["Content-Type"] = "text/html; charset=utf-8"

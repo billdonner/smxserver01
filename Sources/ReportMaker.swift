@@ -90,9 +90,8 @@ open class ReportMaker {
     class   func reportsAvailable(_ response:RouterResponse) {
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
-            let item = ["status":SMaxxResponseCode.success ,   "data": reportsDict() ] as [String : Any]
-            let r = response.status(HTTPStatusCode.OK)
-            let _ =   try r.send(JSON(item).description).end()
+            let item = ["status":SMaxxResponseCode.success as AnyObject ,   "data": reportsDict() as AnyObject ] as JSONDictionary
+            try AppResponses.sendgooresponse(response,item )
         }
         catch {
             Log.error("Could not send")
@@ -104,10 +103,8 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             // ensure its a valid report anme
             guard let reportname = request.parameters["reportname"] else {
-                let item = ["status":SMaxxResponseCode.badMemberID]
-                let r = response.status(HTTPStatusCode.badRequest)
-                let _ =   try r.send(JSON(item).description).end()
-                Log.error("No Report Name")
+                let item = ["status":SMaxxResponseCode.badMemberID as AnyObject] as JSONDictionary
+               try? AppResponses.sendbadresponse(response,item)
                 return
             }
             //getMemberIDFromToken
@@ -133,27 +130,25 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
                 }
             }
             
-            let item = data.count == 0 ? ["status":SMaxxResponseCode.noData] : ["status":SMaxxResponseCode.success ,"request":rqst, "response": data ]
-            let r = response.status(HTTPStatusCode.OK)
-            let _ =   try r.send(JSON(item).description).end()
+                let item = data.count == 0 ? ["status":SMaxxResponseCode.noData] : ["status":SMaxxResponseCode.success ,"request":rqst, "response": data ]
+                try AppResponses.sendgooresponse(response,item as JSONDictionary )
+
                   return
             } // has access token
             else {
                 // no token
-                let item =  ["status":SMaxxResponseCode.noToken]
-                let r = response.status(HTTPStatusCode.badRequest)
-                let _ =   try r.send(JSON(item).description).end()
+                let item =  ["status":SMaxxResponseCode.noToken as AnyObject] as JSONDictionary
+                try? AppResponses.sendbadresponse(response, item)
                 return
             }
         }
         catch {
             Log.error("Cant find token for report")
         }
-            //should never get here
     // no token
-    let item =  ["status":SMaxxResponseCode.noToken]
-    let r = response.status(HTTPStatusCode.badRequest)
-    let _ =   try! r.send(JSON(item).description).end()
+    let item =  ["status":SMaxxResponseCode.noToken as AnyObject] as JSONDictionary
+    try? AppResponses.sendbadresponse(response, item)
+
     return
     }
     
@@ -173,7 +168,6 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
          "most-popular-tags": ( ReportKind.aboutTags,  ReportMaker.most_popular_tags_report),
          "most-popular-taggedusers": ( ReportKind.aboutTags,  ReportMaker.most_popular_taggedusers_report),
          "most-popular-filters": ( ReportKind.aboutTags,  ReportMaker.most_popular_filters_report),
-         
          
          "all-followings": ( ReportKind.aboutPeople,   ReportMaker.all_followings_report),
          "top-likers": ( ReportKind.aboutPeople,  ReportMaker.top_likers_report),
@@ -284,6 +278,9 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
 }
 extension SMaxxRouter {
     class func setupRoutesForReports(_ router: Router ) {
+        
+        
+        print("*** setting up Reports ***")
         
         ///
         // MARK:-  Reports Available

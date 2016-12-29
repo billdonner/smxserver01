@@ -36,13 +36,17 @@ open class Membership {
     }
     
     class func isMember(_ id:String) -> Bool {
+        
+        //from all over
          if let _ = Membership.shared.members[id] {
             return true
         }
         return false 
     }
-    
+    //from all over
     class func getTokenFromID(id:String) -> String? {
+        //from all over
+
     // member must have access token for instagram api access
     if    let mem = Membership.shared.members[id],
         let token = mem["access_token"] as? String {
@@ -50,7 +54,7 @@ open class Membership {
     }
         return nil
     }
-    class func getTokensFromID(id:String) -> (String?,String?) {
+    class func getTokensFromID(id:String) -> (String?,String?) { // from reportmaker
         // member must have access token for instagram api access
         if    let mem = Membership.shared.members[id]{
             let token = mem["access_token"] as? String
@@ -60,7 +64,8 @@ open class Membership {
         return( nil,nil)
     }
     //mem[  "smaxx-token"]
-    class func getMemberIDFromToken(_ token:String) throws -> String {
+    class func getMemberIDFromToken(_ token:String) throws -> String {// from reportmaker
+
         for (_,member) in Membership.shared.members {
             if member["smaxx-token"] as! String  == token {
                 return member["id"] as! String
@@ -68,6 +73,10 @@ open class Membership {
         }
       throw SMaxxError.noMemberFromToken
     }
+    
+    
+    
+    
     class    func addMembership(_ request:RouterRequest , _ response:RouterResponse) {
         
         //        guard let id = request.params["id"] else {
@@ -82,8 +91,7 @@ open class Membership {
         do {
             if Membership.shared.members[id] != nil {
                 // duplicate
-                let dict = ["status":SMaxxResponseCode.duplicate  as AnyObject]  as  [String:AnyObject]
-                try response.status(HTTPStatusCode.OK).send(JSON(dict).description).end()
+                AppResponses.acceptgoodrequest(response,  SMaxxResponseCode.duplicate)
             } else {
                 
                 
@@ -129,12 +137,10 @@ open class Membership {
         do {
               response.headers["Content-Type"] = "application/json; charset=utf-8"
             if let x = Membership.shared.members[id] {
-                let item = ["status":SMaxxResponseCode.success ,   "data": x ] as [String : Any]
-                let r = response.status(HTTPStatusCode.OK)
-                let _ =   try r.send(JSON(item).description).end()
+                let item = ["status":SMaxxResponseCode.success as AnyObject ,   "data": x ] as JSONDictionary
+                try AppResponses.sendgooresponse(response,item )
             }  else
             {
-                
                 let item = ["status":  SMaxxResponseCode.badMemberID] 
                 let r = response.status(HTTPStatusCode.badRequest)
                 let _ =   try r.send(JSON(item).description).end()
@@ -145,6 +151,7 @@ open class Membership {
             Log.error("Could not send")
         }
     }
+    
     class  func deleteMembership(_ request:RouterRequest,_ response:RouterResponse) {
         /// remove from memory and save entire pile
         do {
@@ -236,6 +243,9 @@ open class Membership {
 
 extension SMaxxRouter {
      class func setupRoutesForMembership(_ router: Router ) {
+        
+        
+        print("*** setting up Membership ***")
        
         ///
         // MARK:- Membership tracks who has the app and has consented to our terms

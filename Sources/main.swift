@@ -45,22 +45,23 @@ func ciFor(_ tag:String) -> InstagramCredentials {
         clientId: "09bff63ecf0f4e4c866041a455c7ff35",
         clientSecret: "ce190ab2737f46628a33f3484c4f3a17",
         callbackBase: "http://socialmaxx.net") // +/membership /instagram/callback
-   
+        
     // same credentials for both dev and local tags
-   case "DEV":    return InstagramCredentials(
+    case "DEV":    return InstagramCredentials(
         clientId: "d7020b2caaf34e13a1ca4bdf1504e4dc",
         clientSecret: "0c320f295a3c45af9ff35c00bb341088",
         callbackBase: "http://socialmaxx.sytes.net")// +/membership /instagram/callback
         
-        // same credentials for both dev and local tags
+    // same credentials for both dev and local tags
     default:    return InstagramCredentials(
         clientId: "XXXd7020b2caaf34e13a1ca4bdf1504e4dc",
         clientSecret: "0c320f295a3c45af9ff35c00bb341088",
         callbackBase: "http://XXXsocialmaxx.sytes.net")// +/membership /instagram/callback
-
+        
     }
 }
 class Sm {
+    
     class var axx: Sm {
         struct Axx { static let smg = Sm() }
         return Axx.smg
@@ -82,23 +83,23 @@ class Sm {
     
     func verificationToken () -> String {
         let x = ip.components(separatedBy: ".").joined(separator: "") // strip dots
-      return "\(servertag)\(portno)\(x)"
+        return "\(servertag)\(portno)\(x)"
     }
     
     func status () -> JSONDictionary  {
         
         let a : JSONDictionary  = [ "software-verision":version as AnyObject,
-                                        "instagram-api-url":baseURLString as AnyObject,
-                                "smaxx-server-ip":ip as AnyObject,
-                                 "packagename":packagename as AnyObject,
-                                 "servertag":servertag as AnyObject,
-                                 "portno":portno as AnyObject,
-                                // "modes":modes,
-                                 "title":title as AnyObject,
-                                 "apicalls":igApiCallCount as AnyObject,
-                                 "started":started as AnyObject,
-                                
-                                 ]
+                                    "instagram-api-url":baseURLString as AnyObject,
+                                    "smaxx-server-ip":ip as AnyObject,
+                                    "packagename":packagename as AnyObject,
+                                    "servertag":servertag as AnyObject,
+                                    "portno":portno as AnyObject,
+                                    // "modes":modes,
+            "title":title as AnyObject,
+            "apicalls":igApiCallCount as AnyObject,
+            "started":started as AnyObject,
+            
+            ]
         return a
     }
     
@@ -106,12 +107,12 @@ class Sm {
         operationQueue =  OperationQueue()
         operationQueue.name = "InstagramOperationsQueue"   /// does not work with .main()
         operationQueue.maxConcurrentOperationCount = 3
-    
+        
     }
     
     func setServer(_ servertag:String  ) {
         Sm.axx.servertag =  servertag
-        Sm.axx.ci = ciFor(servertag) 
+        Sm.axx.ci = ciFor(servertag)
     }
 }
 func startup_banner() {
@@ -120,7 +121,7 @@ func startup_banner() {
     /// get plist variables, server tag must be known
     
     let dict = NSDictionary(contentsOfFile:  ModelData.staticPath() + "/Info.plist")
-
+    
     
     let apiurl = "https://api.ipify.org?format=json"
     IGOps.perform_get_request(apiurl) { status,body  in
@@ -187,7 +188,8 @@ startup_banner()
 ///
 Membership.restoreMembership()
 
-
+/// start 1-4 servers based on the flavor modes passed on the startup command line
+///   - at this time the servers are started on sequential ports
 
 ///
 /// The Kitura router
@@ -197,12 +199,40 @@ let router = Router()
 ///
 /// Setup routes - according to global modes setup from command line
 ///
-SMaxxRouter.setupRoutes( router)
-Kitura.addHTTPServer(onPort: Sm.axx.portno, with: router)
+
+SMaxxRouter.setupRoutesPlain( router)
+
+let srv = Kitura.addHTTPServer(onPort: Sm.axx.portno, with: router)
+srv.started { [unowned router] in
+    print("\(router) started on port \(Sm.axx.portno)")
+}
+
+let flavors = Sm.axx.modes
+
+if flavors.contains("reports") {
+    let rrouter = Router()
+    SMaxxRouter.setupRoutesForReports(rrouter )
+    let srv = Kitura.addHTTPServer(onPort: Sm.axx.portno+1, with: rrouter)
+    srv.started { [unowned rrouter] in
+        print("\(rrouter) started on port \(Sm.axx.portno+1)")
+    }
+}
+if flavors.contains("membership") {
+    let mrouter = Router()
+    SMaxxRouter.setupRoutesForMembership(mrouter )
+    let srv = Kitura.addHTTPServer(onPort: Sm.axx.portno+2, with: mrouter)
+    srv.started { [unowned mrouter] in
+        print("\(mrouter) started on port \(Sm.axx.portno+2)")
+    }
+}
+if flavors.contains("workers") {
+    let wrouter = Router()
+    SMaxxRouter.setupRoutesForWorkers(router: wrouter )
+    let srv = Kitura.addHTTPServer(onPort: Sm.axx.portno+3, with: wrouter)
+    srv.started { [unowned wrouter] in
+        print("\(wrouter) started on port \(Sm.axx.portno+3)")
+    }
+}
 Kitura.run()
 
-//let server = HTTPServer.listen(port: Sm.axx.portno, delegate:router)
-//
-//server.run()
-
-/// strangely, this runs off the bottom
+/// deliberately but strangely, this runs off the bottom
