@@ -110,13 +110,13 @@ class BasicAuthMiddleware: RouterMiddleware {
 
 open class SMaxxRouter {
     
-          class func setupRoutesPlain(_ router: Router) {
+    class func setupRoutesPlain(_ router: Router, port:Int16) {
         //
         // the server can run in several different flavours as determined by the routes that are setup
         //  the flavors are passed in from the original kitura startup command line
         
             
-            print("*** setting up Plain Pages and IG Callbacks ***")
+            print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
         
         router.all(middleware: BasicAuthMiddleware())
         router.all("/*", middleware: BodyParser())

@@ -242,10 +242,30 @@ open class Membership {
 }
 
 extension SMaxxRouter {
-     class func setupRoutesForMembership(_ router: Router ) {
+     class func setupRoutesForMembership(_ router: Router ,port:Int16) {
         
         
-        print("*** setting up Membership ***")
+        print("*** setting up Membership  on port \(port) ***")
+        
+        /// Create or restore the Membership DB
+        ///
+        Membership.restoreMembership()
+        
+        router.get("/status") {
+            request, response, next in
+            
+            let r = ["router-for":"workers","port":port] as [String : Any]
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
+            do {
+                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+            }
+            catch {
+                Log.error("Failed to send response \(error)")
+            }
+            
+            //next()
+        }
+        
        
         ///
         // MARK:- Membership tracks who has the app and has consented to our terms

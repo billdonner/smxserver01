@@ -96,13 +96,7 @@ struct HomePage {
     static func frontpanel (_ serverip:String )->String {
         
         let flavors = Sm.axx.modes
-         let reps =   ""// flavors.contains("reports") ?
-//            "<h3>reports testbed</h3>" +
-//                "<caption>these people have been kind enough to expose their social media details to all of you</caption>" +
-//                "<p><a href = '/fp/?id=1601909741'>small</a> - bill</p>" +
-//                "<p><a href = '/fp/?id=275404302'>medium</a> - james</p>" +
-//            "<p><a href = '/fp/?id=273260628'>large</a> - anon</p>" : "(no reports on this server)"
-        
+         let reps =   ""         
         let mems = flavors.contains("membership") ?
             
             "<h3>membership testbed</h3>" +

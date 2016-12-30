@@ -277,10 +277,27 @@ class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest 
     }// func report
 }
 extension SMaxxRouter {
-    class func setupRoutesForReports(_ router: Router ) {
+    class func setupRoutesForReports(_ router: Router,port:Int16 ) {
         
         
-        print("*** setting up Reports ***")
+        print("*** setting up Reports  on port \(port) ***")
+        
+        
+        router.get("/status") {
+            request, response, next in
+            
+            let r = ["router-for":"workers","port":port] as [String : Any]
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
+            do {
+                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+            }
+            catch {
+                Log.error("Failed to send response \(error)")
+            }
+            
+            //next()
+        }
+        
         
         ///
         // MARK:-  Reports Available

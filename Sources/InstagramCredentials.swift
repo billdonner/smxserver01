@@ -45,22 +45,24 @@ open class InstagramCredentials {
     /// make subscripyion
     open func make_subscription (_ myVerifyToken:String) {
         //print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
-        IGOps.perform_post_request("https://api.instagram.com/v1/subscriptions/",
-                                   paramString: "client_id=\(clientId)&client_secret=\(clientSecret)" +
+        NetClientOps.perform_post_request (
+            schema:"https", host:"spi.instagram.com", port: 443, path:"v1/subscriptions/",
+            paramString: "client_id=\(clientId)&client_secret=\(clientSecret)" +
                                     "&object=user&aspect=media&verify_token=\(myVerifyToken)&callback_url=\(self.callbackPostUrl)",completion:
             { status, body  in
                 guard status == 200 else {
                     
-                    fatalError ("subscription \(myVerifyToken) was unsuccessful \(status)")
+                    Log.error ("INSTAGRAM SAYS subscription \(myVerifyToken) was unsuccessful \(status)")
+                    return
                 }
                 let jsonBody = JSON(data: body!)
                 let meta = jsonBody["meta"]["code"].intValue
                 guard meta == 200 else {
-                     Log.error ("subscription \(myVerifyToken) was unsuccessful meta \(meta)")
+                     Log.error ("INSTAGRAM SAYS subscription \(myVerifyToken) was unsuccessful meta \(meta)")
                     return
                 }
                 
-                Log.info("* subscription \(myVerifyToken) successful")
+                Log.info("* INSTAGRAM SAYS  subscription \(myVerifyToken) successful")
         })// closure
     }
     
@@ -135,8 +137,8 @@ open class InstagramCredentials {
         func inner_two(_ code:String ) {
             let cburl = self.callbackUrl + "&nonce=112332123"
             //  Log.error("STEP_TWO starting with \(     code) just received from Instagram")
-            IGOps.perform_post_request("https://api.instagram.com/oauth/access_token",
-                                       paramString: "client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
+            NetClientOps.perform_post_request(schema:"https", host:"api.instagram.com", port: 443,path:"/oauth/access_token",
+            paramString: "?client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
                 if let body = body ,  status == 200  {
                     
@@ -186,3 +188,10 @@ open class InstagramCredentials {
     }
     
    }
+
+
+
+//
+//
+//
+

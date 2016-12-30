@@ -19,12 +19,14 @@ import LoggerAPI
 import SwiftyJSON
 import Foundation
 
+
+
+fileprivate var activeWorkers: [String:String] = [:]
+
 open class Workers:NSObject {
     
     
     let pipelineKey = "WorkersrIgPipeline"
-    
-    var activeWorkers: [String:String] = [:]
     
     var igDataEngine: IGDataEngine!
     
@@ -138,9 +140,26 @@ open class Workers:NSObject {
 
 extension SMaxxRouter{
     
-    class func setupRoutesForWorkers(router: Router ) {
+    class func setupRoutesForWorkers(router: Router,port:Int16 ) {
         
-        print("*** setting up Workers ***")
+        print("*** setting up Workers on port \(port) ***")
+        
+        router.get("/status") {
+            request, response, next in
+            
+            let r = ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
+            do {
+                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+            }
+            catch {
+                Log.error("Failed to send response \(error)")
+            }
+            
+            //next()
+        }
+        
+        
         
         ///
         // MARK:- Workers list
