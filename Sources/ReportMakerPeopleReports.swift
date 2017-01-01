@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -13,7 +13,7 @@
 
 import Foundation
 // MARK:- People Reports
-extension ReportMaker {
+extension ReportMakerMainServer {
     ///
     // MARK:-  people reports all build similar JSON payloads for delivery back thru API
     ///
@@ -61,14 +61,14 @@ extension ReportMaker {
     class func all_followings_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
     
         let bop = igp.pd.ouAllFollowing
-        return ReportMaker.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
     }
     // MARK:- Users With Highest Total Likes
     ///
     class func top_likers_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_,_) = Instagram.computeFreqCountForLikers(igp,filter:nil) //->([Frqc],Int)
         let bop = freqSortPeople(slikers )//->BunchOfMedia
-        return ReportMaker.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
     }
     ///
     // MARK:- Users With Highest Total Comments
@@ -76,7 +76,7 @@ extension ReportMaker {
     class func top_commenters_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_,_) = Instagram.computeFreqCountForCommenters(igp,filter:nil) //->([Frqc],Int)
         let bop = freqSortPeople(slikers )//->BunchOfMedia
-        return ReportMaker.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
     }
     ///
     // MARK:- Speechless Likers Who Have Never Commented
@@ -84,7 +84,7 @@ extension ReportMaker {
     class func speechless_likers_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_,_) = Instagram.computeFreqCountForSpeechlessLikers(igp) //->([Frqc],Int)
         let bop = freqSortPeople(slikers )//->BunchOfMedia
-        return ReportMaker.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
     }
     ///
     // MARK:- Heartless Commenters Who Have Never Liked
@@ -92,7 +92,7 @@ extension ReportMaker {
     class func  heartless_commenters_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_,_) = Instagram.computeFreqCountForHeartlessCommenters(igp) //->([Frqc],Int)
         let bop = freqSortPeople(slikers )//->BunchOfMedia
-        return ReportMaker.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofpeople(igp ,bop:bop,skip:skip,limit:limit)
     }
 }
 

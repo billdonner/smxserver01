@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 
@@ -142,10 +142,10 @@ open class InstagramCredentials {
             { status, body  in
                 if let body = body ,  status == 200  {
                     
-                    let( userid , token, smtoken, title, pic ) = Members.processInstagramResponse (body: body)
+                    let( userid , token, smtoken, title, pic ) =  self.processInstagramResponse (body: body)
             
                     let w = Sm.axx.workers
-                    w.make_worker_for(id:userid,token:token)
+                    w?.make_worker_for(id:userid,token:token)
                     // w.start(userid,request,response)
                     // see if we can go somewhere interesting
                     
@@ -185,6 +185,31 @@ open class InstagramCredentials {
     /// redirect back from IG from the unwindor path
     open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
+    }
+    
+ 
+    
+   private  func processInstagramResponse(body:Data)->( String , String, String, String, String )  {
+        var ret = ("","","","","")
+        let jsonBody = JSON(data: body)
+        if let token = jsonBody["access_token"].string,
+            let userid = jsonBody["user"]["id"].string,
+            let pic = jsonBody["user"]["profile_picture"].string,
+            let title = jsonBody["user"]["username"].string {
+            //   Log.info("STEP_TWO Instagram sent back \(token) and \(title)")
+            /// stash these, creating new object if needed
+       
+                let smtoken = "\((userid + token).hashValue)"
+                let nows = "\(NSDate())" // time now as string
+            let   createds = nows
+            let ble =  ["id":userid    ,  "created":createds   ,  "last-login":nows   ,
+                                                                                "named":title   ,
+                                                                                "pic":pic    ,
+                                                                                "access_token":token    ,
+                                                                                "smaxx-token":smtoken    ] as AnyObject
+        ret = MembersMainServer.rewriteMemberInfo(ble)
+        }
+        return ret
     }
     
    }

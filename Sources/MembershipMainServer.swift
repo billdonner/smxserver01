@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -19,58 +19,25 @@ import SwiftyJSON
 import Foundation
 
 
-//// all varieties of server include these functions to access a remote Membership server in a highly performant manner
-
-open class MembersCache {
-    class func isMemberFromCache(_ id:String)->Bool {
-        return Members.m_isMember(id)  // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
-        
-    }
-    class func getTokenFromIDFromCache(id:String)-> String? {
-        let tok = Members.m_getTokenFromID(id: id) // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
-        return( tok )
-    }
-    class func getTokensFromIDFromCache(id:String)->(String?,String?){
-        let tok = Members.m_getTokensFromID(id: id)
-        return (tok.0,tok.1)
-    }
-    class func getMemberIDFromTokenFromCache(_ token:String)->String?  {
-        let id = Members.m_getMemberIDFromToken(token)
-        return(id)
-    }
-    class func isMember(_ id:String,completion:@escaping (Bool)->()) {
-       let b =  Members.m_isMember(id)
-        completion( b )
-    
-    }
-    class func getTokenFromID(id:String,completion: @escaping(String?)->()) {
-        let tok = Members.m_getTokenFromID(id: id)
-        completion( tok )
-    }
-    class func getTokensFromID(id:String, completion: @escaping ((String?,String?) ->())){
-        let tok = Members.m_getTokensFromID(id: id)
-        completion (tok.0,tok.1)
-    }
-    class func getMemberIDFromToken(_ token:String, completion:@escaping ((String?) -> ())) {
-        completion(nil)
-        let id = Members.m_getMemberIDFromToken(token)
-        completion(id)
-    }
-}
-
-
 
 /// This "MainServer" is started on its own port via the addHTTPServer Kitura api
 
-class Members : MainServer {
+class MembersMainServer : MainServer {
+    
+    var port:Int16 = 0
+    
+    init(port:Int16) {
+        self.port = port
+    }
     
   static var members :   [String:AnyObject] = [:] // not jsondictionary
 
-//    class var shared: Membership {
-//        struct Singleton {
-//            static let sharedMembership = Membership()
-//        }
-//        return Singleton.sharedMembership
+    func mainPort() -> Int16 {
+        return self.port
+    }
+    func jsonStatus() -> JSONDictionary {
+        return [:]
+    }
 //    }
     
     class func m_isMember(_ id:String) -> Bool {
@@ -211,7 +178,7 @@ class Members : MainServer {
     }
     class   func  membershipList(_ request:RouterRequest,_ response:RouterResponse) {
         
-        let (limit,skip) = ReportMaker.reportOptions(request)
+        let (limit,skip) = ReportMakerMainServer.reportOptions(request)
         
         /// filter membership as per skip and limit
         var mems :  JSONDictionary = [:]
@@ -240,7 +207,7 @@ class Members : MainServer {
     ///
     /// restore from keyed archive plist
     fileprivate class func restoreme(_ userID:String) throws ->   JSONDictionary {
-        let spec = ModelData.membershipPath() +  "\(userID).smaxx"
+        let spec = HomePageMainServer.membershipPath() +  "\(userID).smaxx"
         do {
             if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?    JSONDictionary {
                 return pdx
@@ -267,7 +234,7 @@ class Members : MainServer {
     }
     /// save as keyed archive plist
    class func save ( ) throws {         let start = Date()
-        let spec = ModelData.membershipPath() +  "_MembersCachesmaxx"
+        let spec = HomePageMainServer.membershipPath() +  "_MembersCachesmaxx"
         if  !NSKeyedArchiver.archiveRootObject(["status":SMaxxResponseCode.success ,"data": members],
                                                toFile:spec ){
             throw SMaxxError.cantWriteMembership(message: spec )
@@ -281,14 +248,17 @@ class Members : MainServer {
 
 extension Router {
     
-     func setupRoutesForMembership(port:Int16) {
-        
+     func setupRoutesForMembership( mainServer:MainServer) {
+            
+            // must support MainServer protocol
+            
+            let port = mainServer.mainPort()
         
         print("*** setting up Membership  on port \(port) ***")
         
         /// Create or restore the Membership DB
         ///
-        Members.restoreMembership()
+        MembersMainServer.restoreMembership()
         
         self.get("/status") {
             request, response, next in
@@ -311,8 +281,8 @@ extension Router {
         ///
         self.get("/membership/:id") {
             request, response, next -> () in
-            guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
-            Members.membershipForID(id,response)
+            guard let id = request.parameters["id"] else { return AppResponses.missingID(response)  }
+            MembersMainServer.membershipForID(id,response)
             next()
         }
         ///
@@ -322,8 +292,8 @@ extension Router {
             request, response, next in
             
             Log.error("delete /membership/:id")
-            guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
-              Members.deleteMembershipForID(id,response)
+            guard let id = request.parameters["id"] else { return AppResponses.missingID(response)  }
+              MembersMainServer.deleteMembershipForID(id,response)
             next()
         }
         ///
@@ -331,7 +301,7 @@ extension Router {
         ///
         self.get("/membership") {
             request, response, next in
-              Members.membershipList(request, response)
+              MembersMainServer.membershipList(request, response)
             next()
         }
         
@@ -340,7 +310,7 @@ extension Router {
         ///
         self.post("/membership") {
             request, response, next in
-              Members.addMembership(request,response)
+              MembersMainServer.addMembership(request,response)
             next()
         }
         
@@ -349,7 +319,7 @@ extension Router {
         ///
         self.delete("/membership") {
             request, response, next in
-              Members.deleteMembership(request,response)
+              MembersMainServer.deleteMembership(request,response)
             next()
         }
 
@@ -388,56 +358,38 @@ extension Router {
     
 
 }
-extension Members {
+extension MembersMainServer {
     
-    class func processInstagramResponse(body:Data)->( String , String, String, String, String )  {
+    class func rewriteMemberInfo(_ ble:AnyObject) -> ( String , String, String, String, String )  {
         var ret = ("","","","","")
-        let jsonBody = JSON(data: body)
-        if let token = jsonBody["access_token"].string,
-            let userid = jsonBody["user"]["id"].string,
-            let pic = jsonBody["user"]["profile_picture"].string,
-            let title = jsonBody["user"]["username"].string {
-            //   Log.info("STEP_TWO Instagram sent back \(token) and \(title)")
-            /// stash these, creating new object if needed
+        if let userid = ble["id"] as? String {
             do {
-                let smtoken = "\((userid + token).hashValue)"
-                let nows = "\(NSDate())" // time now as string
-                let mu =  Members.members[userid]
+                
+                let mu =  MembersMainServer.members[userid]
                 if mu != nil {
                     // already there, just update last login time
-                    if let created = mu!["created"] as? String {
-                         Members.members[userid] = ["id":userid    ,
-                                                             "created":created   ,
-                                                             "last-login":nows   ,
-                                                             "named":title   ,
-                                                             "pic":pic    ,
-                                                             "access_token":token    ,
-                                                             "smaxx-token":smtoken    ] as AnyObject
-                        // error
-                        Log.error("Could not find created field in mu")
-                    }
+                    //                if let created = mu!["created"] as? String {
+                    //                    mu!["created"] = ble["created"] as? String
+                    //                    MembersMainServer.members[userid] = ble
+                    //                    // error
+                    //                    Log.error("Could not find created field in mu")
+                    //                }
                 } else {
                     // not there make new
-                    Members.members[userid] = ["id":userid    ,
-                                                         "created":nows    ,
-                                                         "last-login":nows    ,
-                                                         "named":title    ,
-                                                         "pic":pic    ,
-                                                         "access_token":token    ,
-                                                         "smaxx-token":smtoken     ]  as AnyObject
+                    MembersMainServer.members[userid] = ble
                 }
                 
                 ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
                 /// adjust membership table and save it to disk
                 /// save entire pile
-                try  Members.save ( )
+                try  MembersMainServer.save ( )
                 //Log.info("saved membership state")
-                ret = ( userid , token, smtoken, title, pic )
+                ret = ( userid , "","","","")// token, smtoken, title, pic )
             }
             catch  {
                 Log.error("Could not save membership")
             }
-        }
+        }// has id
         return ret
     }
 }

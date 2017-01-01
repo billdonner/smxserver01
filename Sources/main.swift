@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 /** hacked by wld
@@ -38,6 +38,8 @@ import Foundation
 //#endif
 
 protocol MainServer {
+    func mainPort() -> Int16
+    func jsonStatus() -> JSONDictionary
     
 }
 func ciFor(_ tag:String) -> InstagramCredentials {
@@ -63,6 +65,67 @@ func ciFor(_ tag:String) -> InstagramCredentials {
         
     }
 }
+
+
+struct AppResponses {
+    
+    static  func missingID(_ response:RouterResponse) {
+        response.status(HTTPStatusCode.badRequest)
+        Log.error("Request does not contain ID")
+        return
+    }
+    
+    /// log error and reply with bad status to user
+    static func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
+        do {
+            let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
+            Log.error("badrequest \(rqst)")
+            let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
+            try sendbadresponse(response, item)
+            
+        }
+        catch {
+            Log.error("Could not send rejectduetobadrequest ")
+        }
+    }
+    static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
+        do {
+            let  item =   ["status":code as AnyObject]
+            try sendgooresponse(response,item )
+            
+            //Log.error("Did send acceptgoodrequest")
+            
+        }
+        catch {
+            Log.error("Could not send acceptgoodrequest")
+        }
+    }
+    static func sendgooresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws {
+        // item:JSONDictionary) {
+        do {
+            
+            let r = response.status(HTTPStatusCode.OK)
+            let _ =   try r.send(JSON(item).description).end()
+            //Log.error("Did send acceptgoodrequest")
+        }
+        catch {
+            Log.error("Could not send acceptgoodrequest")
+        }
+    }
+    static func sendbadresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws { // item:JSONDictionary) {
+        do {
+            
+            let r = response.status(HTTPStatusCode.badRequest)
+            let _ =   try r.send(JSON(item).description).end()
+        }
+        catch {
+            Log.error("Could not send sendbadresponse")
+        }
+    }
+    
+}
+
+///
 class Sm {
     
     class var axx: Sm {
@@ -74,7 +137,7 @@ class Sm {
     var packagename = "t5"
     var servertag = "-unassigned-"
     var ci : InstagramCredentials!
-    var workers = Workers()
+    var workers : WorkersMainServer!
     var portno:Int16  = 8090
     var version = "v0.465"
     var modes = ["reports","membership","workers"]
@@ -122,9 +185,7 @@ func startup_banner() {
     
     /// get plist variables, server tag must be known
     
-    //let dict = NSDictionary(contentsOfFile:  ModelData.staticPath() + "/Info.plist")
-    
-    
+
     //let apiurl = "https://api.ipify.org?format=json"
     //NetClientOps.perform_get_request(apiurl)
     
@@ -210,8 +271,9 @@ let flavors = Sm.axx.modes
 var httpServerPort = Sm.axx.portno+1 // leave one for main server
 
 if flavors.contains("reports") {
+    let rserver = ReportMakerMainServer(port:httpServerPort)
     let rrouter = Router()
-    rrouter.setupRoutesForReports(port:httpServerPort)
+    rrouter.setupRoutesForReports(mainServer:rserver)
     let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: rrouter)
     
     print("reports \(rrouter) starting on port \(httpServerPort)")
@@ -224,8 +286,9 @@ if flavors.contains("reports") {
 if flavors.contains("membership") {
     //
     
+    let rserver = MembersMainServer(port:httpServerPort)
     let mrouter = Router()
-    mrouter.setupRoutesForMembership(port:httpServerPort)
+    mrouter.setupRoutesForMembership(mainServer:rserver)
     let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: mrouter)
     
     print("membership \(mrouter) starting on port \(httpServerPort)")
@@ -236,8 +299,11 @@ if flavors.contains("membership") {
     httpServerPort += 1
 }
 if flavors.contains("workers") {
+    //let workers = Sm.axx.workers
+    
+   let  workers = WorkersMainServer(port:httpServerPort)
     let wrouter = Router()
-    wrouter.setupRoutesForWorkers(port:httpServerPort)
+    wrouter.setupRoutesForWorkers(mainServer:workers)
     let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: wrouter)
     
     print("workers \(wrouter) starting on port \(httpServerPort)")
@@ -250,8 +316,9 @@ if flavors.contains("workers") {
 /// this gets started unconditionally
 
 
+let rserver = HomePageMainServer(port:httpServerPort)
 let mainplainrouter = Router()
-mainplainrouter.setupRoutesPlain(port:Sm.axx.portno)
+mainplainrouter.setupRoutesPlain(mainServer:rserver) 
 
 let srv = Kitura.addHTTPServer(onPort: Int(Sm.axx.portno), with: mainplainrouter)
 

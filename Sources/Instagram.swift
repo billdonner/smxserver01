@@ -26,6 +26,14 @@ struct Instagram {
         var counter = 0
         var user: UserData?
     }
+
+   static  func inNotIn(_ a:AnalysisBlock,_ b:AnalysisBlock) -> AnalysisBlock {
+        var ret : AnalysisBlock = [:]
+        for (key,val) in a {  if (b[key] != nil) { } else { ret[key] = val }}
+        return ret
+    }
+    
+    
     // open Instagram app in various ways
     
     static func grandTotalLikes(_ ig:SocialDataProcessor ) -> Int {
@@ -458,3 +466,103 @@ struct Instagram {
         return fail
     }
 }
+
+
+
+
+
+
+
+//func inAndIn(_ a:AnalysisBlock,_ b:AnalysisBlock) -> AnalysisBlock {
+//    var ret : AnalysisBlock = [:]
+//    for (key,val) in a {  if (b[key] == nil) { } else { ret[key] = val }}
+//    return ret
+//}
+
+// MARK: Support funcs
+// func removeDuplicates(_ array:BunchOfIGPeople) -> BunchOfIGPeople {
+//    var encountered = Set<String>()
+//    var result: BunchOfIGPeople = []
+//    for value in array {
+//        if let id = value["id"] as? String {
+//            if !encountered.contains(id) {
+//                // Do not add a duplicate element.
+//                // Add id to the set.
+//                encountered.insert(id)
+//                // ... Append the value.
+//                result.append(value)
+//            }
+//        }
+//    }
+//    return result
+//}
+//
+// func reverseFrequencyOrder (_ aa: BunchOfPeople,
+//                                   by: BunchOfPeople) ->  BunchOfPeople {
+//    // reorders the users in aa
+//    // according to the frequency of references in block by
+//    // both are assumed to be in sort order, aa must be unique
+//    var aaidx = 0
+//    var byidx = 0
+//    var result: BunchOfPeople = []
+//    var frequencies :[FreqCount] = []
+//    let aacount = aa.count
+//    let bycount = by.count
+//    for idx in 0..<aacount {
+//        frequencies.append(FreqCount(idx: idx,frequency: 0))
+//    }
+//    while aaidx < aacount && byidx < bycount {
+//        // depends on short circuit evaluation by &&
+//        while aaidx < aacount  && (aa[aaidx].id) < (by[byidx].id){
+//            aaidx = aaidx + 1
+//        }
+//
+//        while aaidx < aacount  && byidx < bycount && (aa[aaidx].id) >=  (by[byidx].id) {
+//            if (aa[aaidx].id) ==  (by[byidx].id) {
+//
+//                frequencies[aaidx].frequency = frequencies[aaidx].frequency + 1
+//            }
+//            byidx = byidx + 1
+//        }
+//    }
+//    // rearrange results
+//    frequencies.sort  { $0.frequency>$1.frequency }
+//    for freq in frequencies {
+//        result.append(aa[freq.idx])
+//    }
+//    return result
+//}
+// func intersect(_ array1:  BunchOfPeople,
+//                      _ array2: BunchOfPeople) ->  BunchOfPeople {
+//    var encountered = Set<String>()
+//    var result:  BunchOfPeople = []
+//    for value in array1 {
+//        if !encountered.contains(value.id ) {
+//            // Do not add a duplicate element.
+//            // Add value to the set.
+//            encountered.insert(value.id )
+//        }
+//    }
+//    for value in array2 {
+//        if encountered.contains(value.id) {
+//            // Its in both
+//
+//            // ... Append the value.
+//            result.append(value)
+//        }
+//    }
+//    return result
+//}
+
+
+//static func xinNotIn(_ a:StringAnalysisBlock,_ b:AnalysisBlock) -> StringAnalysisBlock {
+//    var ret : StringAnalysisBlock = [:]
+//    for (key,val) in a {  if (b[key] != nil) { } else { ret[key] = val }}
+//    return ret
+//}
+//static  func xinNotIn(_ a:AnalysisBlock,_ b:StringAnalysisBlock) -> AnalysisBlock {
+//    var ret : AnalysisBlock = [:]
+//    for (key,val) in a {  if (b[key] != nil) { } else { ret[key] = val }}
+//    return ret
+//}
+

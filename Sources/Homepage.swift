@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 
@@ -22,7 +22,7 @@ import Foundation
 ///
 // MARK:-  The homepage is shown in response to / or /?id=12345
 ///
-struct HomePage {
+extension HomePageMainServer{
     
     fileprivate static func standard_footer()->String {
         let s = Sm.axx.modes.joined(separator: "+")
@@ -134,7 +134,7 @@ struct HomePage {
     }
     static func homepage(_ serverip:String )->String {
         var s:String
-        let url = ModelData.staticPath() + "/body.html"
+        let url = HomePageMainServer.staticPath() + "/body.html"
         do {
             s = try String(contentsOfFile:  url )
         }
@@ -164,13 +164,13 @@ struct HomePage {
         var buf = ""
         let serverip = Sm.axx.ip
         if  let id  = request.queryParameters["id"] {
-            buf = HomePage.frontpanel1(id,serverip:serverip)
+            buf = HomePageMainServer.frontpanel1(id,serverip:serverip)
         }
         else      if  let _  = request.queryParameters["admin"] {
-            buf = HomePage.frontpanel2(serverip)
+            buf = HomePageMainServer.frontpanel2(serverip)
         }
         else {
-            buf = HomePage.frontpanel(serverip)
+            buf = HomePageMainServer.frontpanel(serverip)
         }
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
@@ -180,10 +180,11 @@ struct HomePage {
             Log.error("Failed to send response \(error)")
         }
     }
+    
 static    func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) {
         
         let serverip = Sm.axx.ip
-        let buf = HomePage.homepage(serverip)
+        let buf = HomePageMainServer.homepage(serverip)
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
             try response.status(HTTPStatusCode.OK).send(buf).end()
@@ -192,15 +193,4 @@ static    func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) 
             Log.error("Failed to send response \(error)")
         }
     }
-}
-
-open class RestSupport {
-    /// complain of missing id
-    class  func missingID(_ response:RouterResponse) {
-        response.status(HTTPStatusCode.badRequest)
-        Log.error("Request does not contain ID")
-        return
-}
-/// status json
-
 }

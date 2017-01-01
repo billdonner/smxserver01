@@ -1,10 +1,10 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
-//  ReportMaker.swift
+//  ReportMakerMainServer.swift
 //  SMaxxServer
 //
 //  Created by william donner on 5/3/16.
@@ -49,7 +49,7 @@ typealias ReportingFunc = (_ igp:SocialDataProcessor,_ skip:Int,_ limit:Int) -> 
 // MARK:- The PdCache is an implicit singleton
 ///
 typealias PdCache = [String:PersonData]
-var ThePdCache:PdCache = [:]
+fileprivate var ThePdCache:PdCache = [:]
 
 
 //http://stackoverflow.com/questions/29794281/how-to-get-memory-usage-in-swift
@@ -69,8 +69,21 @@ func report_memory() -> UInt{
     return 0
     //  }
 }
-class ReportMaker:MainServer {
+class ReportMakerMainServer :MainServer {
+    var port:Int16 = 0
     
+    init(port:Int16) {
+        self.port = port
+    }
+    
+    
+    func mainPort() -> Int16 {
+        return self.port
+    }
+    func jsonStatus() -> JSONDictionary {
+        return [:]
+    }
+
     /// get skip and limit options from the main URL
     class  func reportOptions(_ request:RouterRequest) -> (Int,Int) {
         var limit = 1000, skip = 0
@@ -120,10 +133,10 @@ class ReportMaker:MainServer {
                         
                         var rqst : JSONDictionary = ["error":"inconsistency" as AnyObject]
                         
-                        let data = ReportMaker.generate_and_send_report(id,token:mtoken!,reportname:reportname,limit:limit,skip:skip,bypasscache: true)
+                        let data = ReportMakerMainServer.generate_and_send_report(id,token:mtoken!,reportname:reportname,limit:limit,skip:skip,bypasscache: true)
                         
                         // echo the request
-                        if let (gkind,_) =  ReportMaker.reportfuncs[reportname]{
+                        if let (gkind,_) =  ReportMakerMainServer.reportfuncs[reportname]{
                             if gkind == .adHoc {
                                 rqst = ["time":"\(Date())" as AnyObject,"url":request.urlURL as AnyObject] //"report":reportname,"id":id,
                             } else {
@@ -155,26 +168,26 @@ class ReportMaker:MainServer {
 
 static let reportfuncs:[String : ( ReportKind,ReportingFunc)] =
     [
-        "top-posts": ( ReportKind.aboutPosts, ReportMaker.top_posts_report),
-        "top-comments": ( ReportKind.aboutPosts,  ReportMaker.top_comments_report),
-        "when-posting": ( ReportKind.adHoc,  ReportMaker.when_posting_report),
-        "when-topost": ( ReportKind.adHoc,  ReportMaker.when_topost_report),
+        "top-posts": ( ReportKind.aboutPosts, ReportMakerMainServer.top_posts_report),
+        "top-comments": ( ReportKind.aboutPosts,  ReportMakerMainServer.top_comments_report),
+        "when-posting": ( ReportKind.adHoc,  ReportMakerMainServer.when_posting_report),
+        "when-topost": ( ReportKind.adHoc,  ReportMakerMainServer.when_topost_report),
         
-        "all-followers": ( ReportKind.aboutFollowers,   ReportMaker.all_followers_report),
-        "ghost-followers": ( ReportKind.aboutFollowers,   ReportMaker.ghost_followers_report),
-        "unrequited-followers": ( ReportKind.aboutFollowers,  ReportMaker.unrequited_followers_report),
-        "booster-followers": ( ReportKind.aboutFollowers,  ReportMaker.booster_followers_report),
-        "secret-admirers": ( ReportKind.aboutFollowers,  ReportMaker.secret_admirer_followers_report),
+        "all-followers": ( ReportKind.aboutFollowers,   ReportMakerMainServer.all_followers_report),
+        "ghost-followers": ( ReportKind.aboutFollowers,   ReportMakerMainServer.ghost_followers_report),
+        "unrequited-followers": ( ReportKind.aboutFollowers,  ReportMakerMainServer.unrequited_followers_report),
+        "booster-followers": ( ReportKind.aboutFollowers,  ReportMakerMainServer.booster_followers_report),
+        "secret-admirers": ( ReportKind.aboutFollowers,  ReportMakerMainServer.secret_admirer_followers_report),
         
-        "most-popular-tags": ( ReportKind.aboutTags,  ReportMaker.most_popular_tags_report),
-        "most-popular-taggedusers": ( ReportKind.aboutTags,  ReportMaker.most_popular_taggedusers_report),
-        "most-popular-filters": ( ReportKind.aboutTags,  ReportMaker.most_popular_filters_report),
+        "most-popular-tags": ( ReportKind.aboutTags,  ReportMakerMainServer.most_popular_tags_report),
+        "most-popular-taggedusers": ( ReportKind.aboutTags,  ReportMakerMainServer.most_popular_taggedusers_report),
+        "most-popular-filters": ( ReportKind.aboutTags,  ReportMakerMainServer.most_popular_filters_report),
         
-        "all-followings": ( ReportKind.aboutPeople,   ReportMaker.all_followings_report),
-        "top-likers": ( ReportKind.aboutPeople,  ReportMaker.top_likers_report),
-        "top-commenters": ( ReportKind.aboutPeople,  ReportMaker.top_commenters_report),
-        "speechless-likers": ( ReportKind.aboutPeople,  ReportMaker.speechless_likers_report),
-        "heartless-commenters": ( ReportKind.aboutPeople,  ReportMaker.heartless_commenters_report)
+        "all-followings": ( ReportKind.aboutPeople,   ReportMakerMainServer.all_followings_report),
+        "top-likers": ( ReportKind.aboutPeople,  ReportMakerMainServer.top_likers_report),
+        "top-commenters": ( ReportKind.aboutPeople,  ReportMakerMainServer.top_commenters_report),
+        "speechless-likers": ( ReportKind.aboutPeople,  ReportMakerMainServer.speechless_likers_report),
+        "heartless-commenters": ( ReportKind.aboutPeople,  ReportMakerMainServer.heartless_commenters_report)
 ]
 
 
@@ -198,7 +211,7 @@ fileprivate     class func reportsDict()->JSONDictionary {
 fileprivate  class func generate_and_send_report (_ id:String,token:String, reportname:String,limit:Int, skip:Int, bypasscache:Bool = false ) -> JSONDictionary {
     let firstmem: UInt = report_memory()
     let start = Date()
-    let path = ModelData.membershipPath() + id + ".smaxx"
+    let path = HomePageMainServer.membershipPath() + id + ".smaxx"
     var pdx: PersonData!
     if bypasscache == true {
         if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
@@ -229,7 +242,7 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
         
         // first note loading time to return
         let loadtime  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
-        if let ffff =  ReportMaker.reportfuncs[reportname]{
+        if let ffff =  ReportMakerMainServer.reportfuncs[reportname]{
             let (gkind,f) = ffff
             // time how long it takes to produce this report
             let restart = Date()
@@ -276,8 +289,11 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
 }// func report
 }
 extension Router {
-     func setupRoutesForReports(port:Int16 ) {
-        
+     func setupRoutesForReports( mainServer:MainServer) {
+            
+            // must support MainServer protocol
+            
+            let port = mainServer.mainPort()
         
         print("*** setting up Reports  on port \(port) ***")
         
@@ -304,7 +320,7 @@ extension Router {
         
         self.get("/reports" ) {
             _, response, next in
-            ReportMaker.reportsAvailable(response)
+            ReportMakerMainServer.reportsAvailable(response)
             next()
         }
         
@@ -315,12 +331,12 @@ extension Router {
         self.get("/reports/:id/:reportname") {
             request, response, next in
             guard let token = request.queryParameters["access_token"] else {
-                RestSupport.missingID(response)
+                AppResponses.missingID(response)
                 return
             }
             
-            guard let id = request.parameters["id"] else { return RestSupport.missingID(response)  }
-            ReportMaker.reportMakeForID(id,token,request,response)
+            guard let id = request.parameters["id"] else { return AppResponses.missingID(response)  }
+            ReportMakerMainServer.reportMakeForID(id,token,request,response)
             next()
         }
         

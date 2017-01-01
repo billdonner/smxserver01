@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -61,8 +61,6 @@ typealias FilterFunc = (_ key:String,_ val:AnyObject)->Bool
 typealias OptFilterFunc = FilterFunc?
 typealias NetCompletionFunc = (_ status: Int, _ object: AnyObject?) -> ()
 
-typealias IntCompletionFunc = (Int)->()
-typealias IntPlusOptDictCompletionFunc = (Int,OptDict)->()
 typealias PullIntCompletionFunc  = ((SocialDataProcessor) -> ())
 
 typealias BunchOfComments = [CommentData]

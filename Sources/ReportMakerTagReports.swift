@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -15,7 +15,7 @@ import SwiftyJSON
 import Foundation
 
 // MARK:- Tag Reports
-extension ReportMaker {
+extension ReportMakerMainServer {
     fileprivate class func freqSortTags(_ freqs:StringAnalysisBlock)-> [Instagram.Frqtd] {
         var tagCounts:[Instagram.Frqtd] = []
         
@@ -82,7 +82,7 @@ extension ReportMaker {
         igp.figureTags()
         
         let tags = freqSortTags(igp.tagsFreqDict)
-        return ReportMaker.report_from_bunchoftagsD(igp,sab:igp.tagsFreqDict ,keys:tags,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoftagsD(igp,sab:igp.tagsFreqDict ,keys:tags,skip:skip,limit:limit)
     }
     ///
     // MARK:-  Most Popular Tagged Users/Friends Occuring in Users Photos
@@ -92,7 +92,7 @@ extension ReportMaker {
         igp.figureTags()
         
         let taggedUsers = freqSortTags(igp.taggedUsersFreqDict)
-        return ReportMaker.report_from_bunchoftagsD(igp,sab:igp.taggedUsersFreqDict,keys:taggedUsers ,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoftagsD(igp,sab:igp.taggedUsersFreqDict,keys:taggedUsers ,skip:skip,limit:limit)
     }
     ///
     // MARK:- Most Popular Filters Occuring in Users Photos
@@ -103,7 +103,7 @@ extension ReportMaker {
         
         let taggedFilters = freqSortTags(igp.filtersFreqDict)
         
-        return ReportMaker.report_from_bunchoftagsD(igp,sab:igp.filtersFreqDict,keys:taggedFilters ,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoftagsD(igp,sab:igp.filtersFreqDict,keys:taggedFilters ,skip:skip,limit:limit)
     }
     
 }

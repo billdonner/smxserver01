@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 
@@ -21,57 +21,6 @@ import Foundation
 #else
     public typealias OptionValue = AnyObject
 #endif
-
-struct AppResponses {
-/// log error and reply with bad status to user
-static func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
-    do {
-        let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
-        Log.error("badrequest \(rqst)")
-        let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
-        try sendbadresponse(response, item)
-        
-    }
-    catch {
-        Log.error("Could not send rejectduetobadrequest ")
-    }
-}
-static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
-    do {
-        let  item =   ["status":code as AnyObject]
-        try sendgooresponse(response,item )
-        
-        //Log.error("Did send acceptgoodrequest")
-        
-    }
-    catch {
-        Log.error("Could not send acceptgoodrequest")
-    }
-}
-static func sendgooresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws {
-    // item:JSONDictionary) {
-    do {
-        
-        let r = response.status(HTTPStatusCode.OK)
-        let _ =   try r.send(JSON(item).description).end()
-        //Log.error("Did send acceptgoodrequest")
-    }
-    catch {
-        Log.error("Could not send acceptgoodrequest")
-    }
-}
-static func sendbadresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws { // item:JSONDictionary) {
-    do {
-        
-        let r = response.status(HTTPStatusCode.badRequest)
-        let _ =   try r.send(JSON(item).description).end()
-    }
-    catch {
-        Log.error("Could not send sendbadresponse")
-    }
-}
-
-}
 
 ///
 // MARK:- Custom middleware that allows Cross Origin HTTP requests
@@ -106,26 +55,51 @@ class BasicAuthMiddleware: RouterMiddleware {
 /// MARK:-   Sets up all the routes according to flavor modes
 ///
 
-class SMaxxRouter:MainServer {
+class HomePageMainServer:MainServer {
+   func jsonStatus() -> JSONDictionary {
+        return [:]
+    }
+
+    var port:Int16 = 0
     
+    init(port:Int16) {
+        self.port = port
+    }
+    
+    
+    func mainPort() -> Int16 {
+        return self.port
+    }
+    static func staticPath()->String {
+        return documentsPath() + "/_smaxx-static/"  + Sm.axx.servertag
+    }
+    static func membershipPath()->String {
+        return documentsPath() + "/_membership/"
+    }
+    fileprivate static func documentsPath()->String {
+        
+        
+        let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
+        let docDir = docurl.path
+        return docDir
+    }
     // all the action is in the router extension
     
-} // end of SmaxxRouter
+} // end of HomePageMainServer
 
 extension Router {
     
-     func setupRoutesPlain( port:Int16) {
-        //
-        // the server can run in several different flavours as determined by the routes that are setup
-        //  the flavors are passed in from the original kitura startup command line
+    func setupRoutesPlain(mainServer:MainServer) {
+
+        // must support MainServer protocol
         
-        
+        let port = mainServer.mainPort()
         print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
         
         self.all(middleware: BasicAuthMiddleware())
         self.all("/*", middleware: BodyParser())
         self.all("/*", middleware: AllRemoteOriginMiddleware())
-        let staticFileServer = StaticFileServer(path:  ModelData.staticPath())
+        let staticFileServer = StaticFileServer(path:  HomePageMainServer.staticPath())
         //, options: [:], customResponseHeadersSetter: nil)
         
         //StaticFileServer(path: ModelData.staticPath(), options: nil)
@@ -166,7 +140,7 @@ extension Router {
         ///
         self.get("/status") {
             request, response, next in
-            HomePage.buildStatus(request,response)
+            HomePageMainServer.buildStatus(request,response)
             next()
         }
         self.get("/log") {
@@ -195,7 +169,7 @@ extension Router {
         ///
         self.get("/fp") {
             request, response, next in
-            HomePage.buildFrontPage(request,response)
+            HomePageMainServer.buildFrontPage(request,response)
             next()
         }
         
@@ -206,7 +180,7 @@ extension Router {
         
         self.get("/") {
             request, response, next in
-            HomePage.buildHomePage(request,response)
+            HomePageMainServer.buildHomePage(request,response)
             next()
         }
         

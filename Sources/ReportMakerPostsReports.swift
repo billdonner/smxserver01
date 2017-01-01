@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -14,7 +14,7 @@ import LoggerAPI
 import Foundation
 
 // MARK:- Posts Reports
-extension ReportMaker {
+extension ReportMakerMainServer {
     ///
     // MARK:-  post reports all build similar JSON payloads for delivery back thru API
     ///p7x24_report_from_bunchofposts
@@ -62,7 +62,7 @@ extension ReportMaker {
     class func top_posts_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_) = Instagram.computeFreqCountOfLikesForPosts(igp.pd.ouMediaPosts) //->([Frqi],Int)
         let bop = freqSortPosts(slikers,bop:igp.pd.ouMediaPosts)//->BunchOfMedia
-        return ReportMaker.report_from_bunchofposts(igp,bop:bop, skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofposts(igp,bop:bop, skip:skip,limit:limit)
     }
     ///
     // MARK:- Top Posts sorted by count of comments
@@ -70,7 +70,7 @@ extension ReportMaker {
     class func top_comments_report(_ igp:SocialDataProcessor,skip:Int=0,limit:Int=1000) -> ReportResult  {
         let (slikers,_) = Instagram.computeFreqCountOfCommentersForPosts(igp.pd.ouMediaPosts) //->([Frqi],Int)
         let bop = freqSortPosts(slikers,bop:igp.pd.ouMediaPosts)//->BunchOfMedia
-        return ReportMaker.report_from_bunchofposts(igp,bop:bop, skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchofposts(igp,bop:bop, skip:skip,limit:limit)
     }
     ///
     // MARK:- When I Tend To Post in 15min weekly buckets
@@ -79,7 +79,7 @@ extension ReportMaker {
         let mi = Instagram.calculateMediaPostHisto24x7(igp.pd.ouMediaPosts)
         let alphas = AlphaMatrix(m:mi.m)
         let alphastrings = alphas.forRGB()
-        return ReportMaker.p7x24_report_from_stringmatrix(alphastrings)
+        return ReportMakerMainServer.p7x24_report_from_stringmatrix(alphastrings)
     }
     ///
     // MARK:- When Should I Post in 15min weekly buckets
@@ -88,6 +88,6 @@ extension ReportMaker {
         let mi = Instagram.calculateMediaLikesHisto24x7(igp.pd.ouMediaPosts)
         let alphas = AlphaMatrix(m:mi.m)
         let alphastrings = alphas.forRGB()
-        return ReportMaker.p7x24_report_from_stringmatrix(alphastrings)
+        return ReportMakerMainServer.p7x24_report_from_stringmatrix(alphastrings)
     }
 }

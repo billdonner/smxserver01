@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0730"
+   LastUpgradeVersion = "0820"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "______Target_t5"
+               BlueprintIdentifier = "OBJ_329"
                BuildableName = "t5"
                BlueprintName = "t5"
                ReferencedContainer = "container:t5.xcodeproj">
@@ -32,7 +32,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "______Target_t5"
+            BlueprintIdentifier = "OBJ_329"
             BuildableName = "t5"
             BlueprintName = "t5"
             ReferencedContainer = "container:t5.xcodeproj">
@@ -55,7 +55,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "______Target_t5"
+            BlueprintIdentifier = "OBJ_329"
             BuildableName = "t5"
             BlueprintName = "t5"
             ReferencedContainer = "container:t5.xcodeproj">
@@ -63,19 +63,23 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "DEV"
+            argument = "PROD"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "8090"
+            argument = "8094"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "reports,membership,workers"
+            argument = "workers,reports,membership"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "socialmaxx.sytes.net"
+            argument = "socialmaxx.net"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "WEIRDSCIENCE"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
@@ -92,7 +96,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "______Target_t5"
+            BlueprintIdentifier = "OBJ_329"
             BuildableName = "t5"
             BlueprintName = "t5"
             ReferencedContainer = "container:t5.xcodeproj">

@@ -17,52 +17,52 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>______Target_CHttpParser</key>
+		<key>OBJ_154</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_HeliumLogger</key>
+		<key>OBJ_161</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_Kitura</key>
+		<key>OBJ_170</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_KituraNet</key>
+		<key>OBJ_179</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_KituraSys</key>
+		<key>OBJ_194</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_KituraTemplateEngine</key>
+		<key>OBJ_243</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_LoggerAPI</key>
+		<key>OBJ_251</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_Socket</key>
+		<key>OBJ_258</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_SwiftyJSON</key>
+		<key>OBJ_320</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>______Target_t5</key>
+		<key>OBJ_329</key>
 		<dict>
 			<key>primary</key>
 			<true/>

@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -13,7 +13,7 @@
 
 import Foundation
 // MARK:- Follower Reports
-extension ReportMaker {
+extension ReportMakerMainServer {
     ///
     // MARK:-  follower reports all build similar JSON payloads for delivery back thru API
     ///
@@ -63,7 +63,7 @@ extension ReportMaker {
         //            $0.
         //        }
         // TODO: sort as in ios app
-        return ReportMaker.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
     }
     ///
     // MARK:- Booster Followers with Highest Avg Like Rate
@@ -77,7 +77,7 @@ extension ReportMaker {
                 // Log.error("follower \(follower.id) is IN likers dict")}
             }
         }
-        return ReportMaker.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
     }
     
     ///
@@ -92,7 +92,7 @@ extension ReportMaker {
                 // Log.error("follower \(follower.id) is IN likers dict")}
             }
         }
-        return ReportMaker.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
     }
     
     ///
@@ -112,7 +112,7 @@ extension ReportMaker {
                 newfollowers.append(follower)
             }
         }
-        return ReportMaker.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
     }
     
     ///
@@ -127,7 +127,7 @@ extension ReportMaker {
                 // Log.error("follower \(follower.id) is IN likers dict")}
             }
         }
-        return ReportMaker.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
+        return ReportMakerMainServer.report_from_bunchoffollowers(igp, bop:newfollowers,skip:skip,limit:limit)
     }
     
 }

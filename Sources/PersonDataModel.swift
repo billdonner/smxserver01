@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -138,7 +138,7 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
             ouVersion = plistVersion
         }
         let tail = "/\(userID).smaxx"
-        if  !NSKeyedArchiver.archiveRootObject(self, toFile:ModelData.membershipPath() + tail){
+        if  !NSKeyedArchiver.archiveRootObject(self, toFile:HomePageMainServer.membershipPath() + tail){
             throw SMaxxError.cantWriteIGPersonDataFile(message: tail)
         } else {
             let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
@@ -150,7 +150,7 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
     static func restore(_ userID:String) throws -> PersonData {
         let tail = "/\(userID).smaxx"
         do {
-            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:ModelData.membershipPath() + tail)  as? PersonData {
+            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:HomePageMainServer.membershipPath() + tail)  as? PersonData {
                 return pdx
             }
             throw SMaxxError.cantDecodeIGPersonDataFile(message : tail)

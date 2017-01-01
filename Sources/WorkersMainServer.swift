@@ -1,6 +1,6 @@
 ///  provenance - SocialMaxx Server
-///  builds on DEVELOPMENT-SNAPSHOT-2016-05-03-a on OS X 10.11.4  Xcode Version 7.3.1 (7D1014)
-///  26 May 2016
+/// builds on XCode 8.2 standard release on OSX 10.12
+/// as of 2 Jan 2017
 ///
 
 //
@@ -28,8 +28,20 @@ fileprivate var activeWorkers: [String:String] = [:]
 
 
 // this server must be declared as NSObjet so that the notificationcenter  selectors compile
-class Workers:MainServer {
+class WorkersMainServer:MainServer {
+    var port:Int16 = 0
     
+    init(port:Int16) {
+        self.port = port
+    }
+    
+    
+    func mainPort() -> Int16 {
+        return self.port
+    }
+    func jsonStatus() -> JSONDictionary {
+        return [:]
+    }
     
     let pipelineKey = "WorkersrIgPipeline"
     
@@ -41,7 +53,7 @@ class Workers:MainServer {
         self.igDataEngine = IGDataEngine(forLoggedOnUser:  targetID, targetToken:targetToken, delegate: nil ) // the big IG Machine Structure with UI callbacks
         // this is triky cause the pipeline last op must be the object for the addoserver even though the pipeline isnt even started
         let (firstop,lastop) = self.igDataEngine.setupPipeline (pipelineKey,igp:igp) // returns (future) last op
-        NotificationCenter.default.addObserver(self, selector: #selector(Workers.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
+        NotificationCenter.default.addObserver(self, selector: #selector(WorkersMainServer.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
         
         self.igDataEngine.startPipeline(firstop)
     }
@@ -51,7 +63,7 @@ class Workers:MainServer {
         // this is triky cause the pipeline last op must be the object for the addoserver even though the pipeline isnt even started
         let (firstop,lastop) = self.igDataEngine.setupUpdatePipeline (pipelineKey,igp:igp) // returns (future) last op
         //TODO needs to pass argument
-        NotificationCenter.default.addObserver(self, selector: #selector(Workers.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
+        NotificationCenter.default.addObserver(self, selector: #selector(WorkersMainServer.igpipelineFinished), name: NSNotification.Name(rawValue: pipelineKey), object: lastop)
         self.igDataEngine.startPipeline(firstop)
     }
     
@@ -153,7 +165,11 @@ class Workers:MainServer {
 
 extension Router{
     
-     func setupRoutesForWorkers( port:Int16 ) {
+    func setupRoutesForWorkers( mainServer:MainServer) {
+        
+        // must support MainServer protocol
+        
+        let port = mainServer.mainPort()
         
         print("*** setting up Workers on port \(port) ***")
         
