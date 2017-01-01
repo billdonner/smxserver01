@@ -21,9 +21,14 @@ import Foundation
 
 
 
+/// This "MainServer" is started on its own port via the addHTTPServer Kitura api
+
+
 fileprivate var activeWorkers: [String:String] = [:]
 
-open class Workers:NSObject {
+
+// this server must be declared as NSObjet so that the notificationcenter  selectors compile
+class Workers:MainServer {
     
     
     let pipelineKey = "WorkersrIgPipeline"
@@ -52,7 +57,7 @@ open class Workers:NSObject {
     
     /// comes here when pipeline final notification fires
     
-    func igpipelineFinished(not:NSNotification) {
+    @objc func igpipelineFinished(not:NSNotification) {
         
         if let op = not.object as? FinalWrapUpOp {  // op.igp is not same as what we started with
             NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: self.pipelineKey), object: op)
@@ -90,36 +95,43 @@ open class Workers:NSObject {
     }
     
     func start(_ id: String , _ request:RouterRequest , _ response:RouterResponse) {
-        guard true == Membership.isMember(id) else {
-            AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor start")
-            return
-        }
-        // ensure not active
+        MembersCache.isMember(id) { ismemb in
+            
+            guard ismemb else {
+                AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor stop")
+                return
+            }        // ensure not active
         if let _ =  activeWorkers[id]  {
             AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Worker id \(id) is already active")
             return
         }
         // member must have access token for instagram api access
-        if    let token = Membership.getTokenFromID(id: id) {
-            make_worker_for(id: id, token: token)
+       MembersCache.getTokenFromID(id: id) { token in
+        guard let token = token   else {
+                AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.noToken.rawValue,mess:"Worker id \(id) has no access token")
+            return
+            }
+        self.make_worker_for(id: id, token: token)
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")
             let item : JSONDictionary = ["status":SMaxxResponseCode.success  as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
            try? AppResponses.sendgooresponse(response,item )
         }
-        else {
-            AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.noToken.rawValue,mess:"Worker id \(id) has no access token")
+      
         }
-        
     }
     func stopcold(id:String) {
         
         activeWorkers.removeValue(forKey: id)
     }
     func stop(_ id: String, _ request:RouterRequest , _ response:RouterResponse) {
-        guard true == Membership.isMember(id) else {
-            AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor stop")
-            return
-        }
+    
+        
+        MembersCache.isMember(id) { ismemb in
+            
+            guard ismemb else {
+                AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor stop")
+                return
+            }
         // ensure  active
         guard let _ =  activeWorkers[id] else {
             AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.workerNotActive.rawValue,mess:"Worker id \(id) not  active")
@@ -130,21 +142,22 @@ open class Workers:NSObject {
         
         //TODO: really kill the task
         
-        let item :JSONDictionary = ["status":SMaxxResponseCode.success as AnyObject, "workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "idle" as AnyObject  ]
+        let item :JSONDictionary = ["status":SMaxxResponseCode.success  , "workid":id  ,"workerid":"001"  , "newstate": "idle"  ]
         
         try? AppResponses.sendgooresponse(response,item )
-        stopcold(id: id)
+        self.stopcold(id: id)
         
+    }
     }
 }
 
-extension SMaxxRouter{
+extension Router{
     
-    class func setupRoutesForWorkers(router: Router,port:Int16 ) {
+     func setupRoutesForWorkers( port:Int16 ) {
         
         print("*** setting up Workers on port \(port) ***")
         
-        router.get("/status") {
+        self.get("/status") {
             request, response, next in
             
             let r = ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
@@ -164,7 +177,7 @@ extension SMaxxRouter{
         ///
         // MARK:- Workers list
         ///
-        router.get("/workers/start/:id") {
+        self.get("/workers/start/:id") {
             request, response, next in
             guard let id = request.parameters["id"]
                 else {  response.status(HTTPStatusCode.badRequest)
@@ -177,7 +190,7 @@ extension SMaxxRouter{
         }
         
         
-        router.get("/workers/stop/:id") {
+        self.get("/workers/stop/:id") {
             request, response, next in
             guard let id = request.parameters["id"] else { response.status(HTTPStatusCode.badRequest)
                 

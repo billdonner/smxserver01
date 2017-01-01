@@ -106,90 +106,94 @@ class BasicAuthMiddleware: RouterMiddleware {
 /// MARK:-   Sets up all the routes according to flavor modes
 ///
 
-
-
-open class SMaxxRouter {
+class SMaxxRouter:MainServer {
     
-    class func setupRoutesPlain(_ router: Router, port:Int16) {
+    // all the action is in the router extension
+    
+} // end of SmaxxRouter
+
+extension Router {
+    
+     func setupRoutesPlain( port:Int16) {
         //
         // the server can run in several different flavours as determined by the routes that are setup
         //  the flavors are passed in from the original kitura startup command line
         
-            
-            print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
         
-        router.all(middleware: BasicAuthMiddleware())
-        router.all("/*", middleware: BodyParser())
-        router.all("/*", middleware: AllRemoteOriginMiddleware())
-            let staticFileServer = StaticFileServer(path:  ModelData.staticPath())
-            //, options: [:], customResponseHeadersSetter: nil)
-            
-            //StaticFileServer(path: ModelData.staticPath(), options: nil)
-        router.all("/_/", middleware: staticFileServer)
+        print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
+        
+        self.all(middleware: BasicAuthMiddleware())
+        self.all("/*", middleware: BodyParser())
+        self.all("/*", middleware: AllRemoteOriginMiddleware())
+        let staticFileServer = StaticFileServer(path:  ModelData.staticPath())
+        //, options: [:], customResponseHeadersSetter: nil)
+        
+        //StaticFileServer(path: ModelData.staticPath(), options: nil)
+        self.all("/_/", middleware: staticFileServer)
         
         ///
         // MARK:-  Handler Options
         ///
-        router.options("/*") {
+        self.options("/*") {
             _, response, next in
             response.headers["Access-Control-Allow-Headers"] =  "accept, content-type"
             response.headers["Access-Control-Allow-Methods"] = "GET,HEAD,POST,DELETE,OPTIONS,PUT,PATCH"
             response.status(HTTPStatusCode.OK)
             next()
         }
-
-            
-//            router.get("/authcallback") { request, response, next in
-//                response.headers["Content-Type"] = "text/html; charset=utf-8"
-//                
-//                // Log.error("STEP_ONE /login/instagram/callback will authenticate ")
-//                // there should be a code here l so this will redirect as per step one
-//                Sm.axx.ci.authenticate (request: request, response: response) { status in
-//                    guard status == 200  else { Log.error("Back from callback authenticate bad status \(status) "); return }
-//                    do {
-//                        try response.redirect("/")
-//                    }
-//                    catch {
-//                        Log.error("Failed /authcallback redirect \(error)")
-//                    }
-//                }
-//                next()
-//                
-//            }
-
-            ///
-            // MARK:- Show Status
-            ///
-            router.get("/status") {
-                request, response, next in
-                HomePage.buildStatus(request,response)
-                next()
-            }
-            router.get("/log") {
-                request, response, next in
-                let qp = request.queryParameters
-                Log.info("LOGLINE \(qp)")
-                   response.status(HTTPStatusCode.OK)
-                next()
-            }
-             ///
-            // MARK: Callback GETs and POSTs from IG come here
-             ///
-            router.post("/postcallback") {
-                request, response, next in
-                Sm.axx.ci.handle_post_callback(request,response: response)
-                next()
-            }
-            router.get("/postcallback") {
-                request, response, next in
-                 Sm.axx.ci.handle_get_callback(Sm.axx.verificationToken(),request: request,response: response)
-                next()
-            }
-            
+        
+        
+        //            router.get("/authcallback") { request, response, next in
+        //                response.headers["Content-Type"] = "text/html; charset=utf-8"
+        //
+        //                // Log.error("STEP_ONE /login/instagram/callback will authenticate ")
+        //                // there should be a code here l so this will redirect as per step one
+        //                Sm.axx.ci.authenticate (request: request, response: response) { status in
+        //                    guard status == 200  else { Log.error("Back from callback authenticate bad status \(status) "); return }
+        //                    do {
+        //                        try response.redirect("/")
+        //                    }
+        //                    catch {
+        //                        Log.error("Failed /authcallback redirect \(error)")
+        //                    }
+        //                }
+        //                next()
+        //
+        //            }
+        
+        ///
+        // MARK:- Show Status
+        ///
+        self.get("/status") {
+            request, response, next in
+            HomePage.buildStatus(request,response)
+            next()
+        }
+        self.get("/log") {
+            request, response, next in
+            let qp = request.queryParameters
+            Log.info("LOGLINE \(qp)")
+            response.status(HTTPStatusCode.OK)
+            next()
+        }
+        ///
+        // MARK: Callback GETs and POSTs from IG come here
+        ///
+        self.post("/postcallback") {
+            request, response, next in
+            Sm.axx.ci.handle_post_callback(request,response: response)
+            next()
+        }
+        self.get("/postcallback") {
+            request, response, next in
+            Sm.axx.ci.handle_get_callback(Sm.axx.verificationToken(),request: request,response: response)
+            next()
+        }
+        
         ///
         // MARK:- Show a FrontPage
         ///
-        router.get("/fp") {
+        self.get("/fp") {
             request, response, next in
             HomePage.buildFrontPage(request,response)
             next()
@@ -200,7 +204,7 @@ open class SMaxxRouter {
         ///
         
         
-        router.get("/") {
+        self.get("/") {
             request, response, next in
             HomePage.buildHomePage(request,response)
             next()
@@ -210,7 +214,7 @@ open class SMaxxRouter {
         ///
         // MARK:- Handles any errors that get set
         ///
-        router.error { request, response, next in
+        self.error { request, response, next in
             response.headers["Content-Type"] = "text/plain; charset=utf-8"
             do {
                 let errorDescription: String
@@ -231,7 +235,7 @@ open class SMaxxRouter {
         // MARK:- A custom Not found handler
         ///
         // A custom Not found handler
-        router.all { request, response, next in
+        self.all { request, response, next in
             if  response.statusCode == .notFound  {
                 // Remove this wrapping if statement, if you want to handle requests to / as well
                 //if  request.originalUrl != "/"  &&  request.originalUrl != ""  {
@@ -249,7 +253,5 @@ open class SMaxxRouter {
         
         
     }// end of setupRoutes
-    
-} // end of SmaxxRouter
 
-
+}

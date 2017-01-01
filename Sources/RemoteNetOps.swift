@@ -125,7 +125,7 @@ struct RemoteNetOps {
             //return req // feed the beast that wants something returned
     }
     
-    static  func nwPost(_ nsurl:URL, params:[String:AnyObject],completion:@escaping NetCompletionFunc)
+    static  func nwPost(_ nsurl:URL, params:  JSONDictionary,completion:@escaping NetCompletionFunc)
         throws  { // -> NSMutableURLRequest  {
             let req = NSMutableURLRequest(url:nsurl)
             RemoteNetOps.nwEncode(req, parameters: params)
@@ -175,7 +175,7 @@ struct RemoteNetOps {
         
         return encreq
     }
-    static func nwEncode(_ req:NSMutableURLRequest,parameters:[String:AnyObject]){
+    static func nwEncode(_ req:NSMutableURLRequest,parameters:  JSONDictionary){
         // extracted from Alamofire
         func escape(_ string: String) -> String {
             let generalDelimitersToEncode = ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
@@ -213,7 +213,7 @@ struct RemoteNetOps {
         }
         
         if  let uRLComponents = URLComponents(url: req.url!, resolvingAgainstBaseURL: false){
-            let percentEncodedQuery = (uRLComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters)
+            let percentEncodedQuery = (uRLComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters as [String : AnyObject])
             // print("percentEncodedQuery = \(percentEncodedQuery)")
             var nurlcomponents = uRLComponents
             nurlcomponents.percentEncodedQuery = percentEncodedQuery

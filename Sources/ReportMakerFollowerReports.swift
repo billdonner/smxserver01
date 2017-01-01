@@ -23,7 +23,8 @@ extension ReportMaker {
         func emitpeoplerow(_ rowNum:Int, igperson:UserData) {
             let (c1,av1,c2,av2) = Instagram.countsAndAveragesFromPosts(igp,igPerson:igperson)
             // for each row indicate if this user is a member thru the smaxx-id field
-            let smxid =  Membership.isMember(igperson.id) ? igperson.id : ""
+            let smxid =  MembersCache.isMemberFromCache(igperson.id) ? igperson.id : ""
+            
             therows.append( ["row":rowNum as AnyObject,"userid":igperson.username as AnyObject,"smaxx-id":smxid as AnyObject, "pic":igperson.pic as AnyObject,"c1":c1 as AnyObject,"av1":av1 as AnyObject,"c2":c2 as AnyObject,"av2":av2 as AnyObject ] )
             //Log.error("emitting igperson:\(igperson)")
         }

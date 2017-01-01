@@ -79,8 +79,8 @@ open class InstagramCredentials {
         }
         Log.verbose("---->>>>  post callback for user  \(userid)")
         // member must have access token for instagram api access
-        if    let token = Membership.getTokenFromID(id: userid) {
-            Sm.axx.workers.make_worker_for(id: userid, token: token)
+       MembersCache.getTokenFromID(id: userid) { token in
+            Sm.axx.workers.make_worker_for(id: userid, token: token!)
         }
     }
     
@@ -142,7 +142,7 @@ open class InstagramCredentials {
             { status, body  in
                 if let body = body ,  status == 200  {
                     
-                    let( userid , token, smtoken, title, pic ) = Membership.processInstagramResponse (body: body)
+                    let( userid , token, smtoken, title, pic ) = Members.processInstagramResponse (body: body)
             
                     let w = Sm.axx.workers
                     w.make_worker_for(id:userid,token:token)

@@ -168,9 +168,10 @@ struct IGOps {
     
    private static func get_token_for_member(_ targetID:String) throws -> String  {
         
-        if let token = Membership.getTokenFromID(id: targetID) {
-            return token
+    if let token = Members.m_getTokenFromID(id: targetID) {
+        return token
         }
+    
         throw  SMaxxError.noAccessTokenForUser(id: targetID)
     }
     static func getUserstuff (_ targetID:String,
@@ -486,7 +487,7 @@ extension IGOps { // functions that remap instagram data blocks
         ob.taggedUsers = []
         if let users_in_photo = media["users_in_photo"] as? [AnyObject]{
             for tg in users_in_photo  {
-                if let ttg = tg["user"] as? [String:AnyObject]{
+                if let ttg = tg["user"] as?   JSONDictionary{
                     if let og = ttg ["username"] as? String {
                         ob.taggedUsers.append(og)
                     }
@@ -530,7 +531,7 @@ extension IGOps { // networking
                     
                 case .relationship (let userID, let accessToken):
                     let pathString = "/v1/users/" + userID + "/relationship"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken as AnyObject   ])
                     
                 case .userInfo (let userID, let accessToken):
                     let pathString = "/v1/users/" + userID
@@ -734,7 +735,7 @@ extension IGOps { // networking
 //    ////
 //    static func get_token_for_member(_ targetID:String) throws -> String  {
 //
-//        if let token = Membership.getTokenFromID(id: targetID) {
+//        if let token = MembersCachegetTokenFromID(id: targetID) {
 //            return token
 //        }
 //        throw  SMaxxError.noAccessTokenForUser(id: targetID)
