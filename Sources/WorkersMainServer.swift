@@ -4,7 +4,7 @@
 ///
 
 //
-//  Workers.swift
+//  workersMainServer.swift
 //  t3
 //
 //  Created by william donner on 5/24/16.
@@ -23,12 +23,13 @@ import Foundation
 
 /// This "MainServer" is started on its own port via the addHTTPServer Kitura api
 
+var workersMainServer : WorkersMainServer!
+
+class  WorkersMainServer:MainServer {
 
 fileprivate var activeWorkers: [String:String] = [:]
 
 
-// this server must be declared as NSObjet so that the notificationcenter  selectors compile
-class WorkersMainServer:MainServer {
     var port:Int16 = 0
     
     init(port:Int16) {
@@ -40,7 +41,7 @@ class WorkersMainServer:MainServer {
         return self.port
     }
     func jsonStatus() -> JSONDictionary {
-        return [:]
+        return ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
     }
     
     let pipelineKey = "WorkersrIgPipeline"
@@ -80,7 +81,7 @@ class WorkersMainServer:MainServer {
             Log.info ("************ Worker \(op.igp.targetID) igpipelineFinished \(errcode) **************")
             //self.removeProgressIndicator()
             if errcode == 200 {
-                op.igp.pd.ouTotalApiCount +=  (Sm.axx.igApiCallCount -
+                op.igp.pd.ouTotalApiCalls +=  (IGOps.apiCount -
                     self.apiCallCountInitially)
                 
                 //self.runningNicely = true // now prohibit destruction o our saved context
@@ -113,7 +114,7 @@ class WorkersMainServer:MainServer {
                 AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Bad id \(id) passed into SocialDataProcessor stop")
                 return
             }        // ensure not active
-        if let _ =  activeWorkers[id]  {
+        if let _ =  self.activeWorkers[id]  {
             AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.badMemberID.rawValue,mess:"Worker id \(id) is already active")
             return
         }
@@ -145,7 +146,7 @@ class WorkersMainServer:MainServer {
                 return
             }
         // ensure  active
-        guard let _ =  activeWorkers[id] else {
+        guard let _ =  self.activeWorkers[id] else {
             AppResponses.rejectduetobadrequest(response,status:SMaxxResponseCode.workerNotActive.rawValue,mess:"Worker id \(id) not  active")
             return
         }
@@ -170,21 +171,17 @@ extension Router{
         // must support MainServer protocol
         
         let port = mainServer.mainPort()
-        
         print("*** setting up Workers on port \(port) ***")
-        
         self.get("/status") {
             request, response, next in
             
-            let r = ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             do {
-                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(mainServer.jsonStatus()).description).end()
             }
             catch {
                 Log.error("Failed to send response \(error)")
             }
-            
             //next()
         }
         
@@ -201,7 +198,7 @@ extension Router{
                     Log.error("Request does not contain ID")
                     return
             }
-            Sm.axx.workers.start(id,request, response)
+           workersMainServer.start(id,request, response)
             //next()
         }
         
@@ -215,7 +212,7 @@ extension Router{
                 return
          
         }
-        Sm.axx.workers.stop(id,request, response)
+      workersMainServer.stop(id,request, response)
         //next()
     }
 }

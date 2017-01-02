@@ -51,11 +51,21 @@ public struct  IGDataEngine {
     
     fileprivate var startTime : Date?
     
+    
+    fileprivate var operationQueue: OperationQueue! // just one queue for now
+    
+    
+    
     init(forLoggedOnUser:String, targetToken:String, delegate:IGDataEngineDelegate?) {
         self.targetUserID = forLoggedOnUser
         self.targetToken = targetToken
         self.igData = SocialDataProcessor(id:forLoggedOnUser,token:targetToken) // placeholder, better be overwritten in setuppipeline
         self.igBackgroundLoadingPipeline = IGBackgroundLoadingPipeline()
+        
+        operationQueue =  OperationQueue()
+        operationQueue.name = "InstagramOperationsQueue"   /// does not work with .main()
+        operationQueue.maxConcurrentOperationCount = 3
+        
         self.delegate = delegate
     }
     
@@ -107,7 +117,7 @@ public struct  IGDataEngine {
     
      func startPipeline(_ firstOp:Operation) {
         //print("* starting Pipeline with  \(firstOp) added to operation Q")
-        Sm.axx.operationQueue.addOperation(firstOp) // this kicks it off
+        self.operationQueue.addOperation(firstOp) // this kicks it off
     }
     mutating public func setupPipeline (_ notifKey: String,igp:SocialDataProcessor ) -> (NsOp,FinalWrapUpOp) {
         // load user data

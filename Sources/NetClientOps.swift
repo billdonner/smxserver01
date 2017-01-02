@@ -29,7 +29,7 @@ struct NetClientOps {
     {
         if DataTaskGet {
             let url_to_request = schema + "://" + host + ":" + "\(port)/\(path)"
-            let session = URLSession.shared // doesnt work with Sm.axx.session ??
+            let session = URLSession.shared
             let url:URL = URL(string: url_to_request)!
             var request = URLRequest(url: url)
             request.httpMethod = "GET"
@@ -56,7 +56,7 @@ struct NetClientOps {
     {
         if DataTaskPut {
             let url_to_request = schema + "://" + host + ":" + "\(port)/\(path)"
-            let session = URLSession.shared // doesnt work with Sm.axx.session ??
+            let session = URLSession.shared
             let url:URL = URL(string: url_to_request)!
             let request = NSMutableURLRequest(url: url)
             request.httpMethod = "POST"

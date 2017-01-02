@@ -13,7 +13,6 @@
 //
 import Kitura
 import KituraNet
-//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
@@ -22,6 +21,8 @@ import Foundation
 ///  inspired by Kitura Credentials and the google and facebook plugins
 ///  however, this is not a plugin and it uses NSURLSession to communicate with Instagram, not the Kitura HTTP library
 
+
+var instagramCredentials : InstagramCredentials!
 
 open class InstagramCredentials {
     fileprivate var clientId : String
@@ -38,11 +39,9 @@ open class InstagramCredentials {
         self.clientSecret = clientSecret
         self.callbackBase = callbackBase
         self.callbackUrl = self.callbackBase + "/authcallback?type=mobile"
-            self.callbackPostUrl = self.callbackBase + "/postcallback"
-//       // self.callbackPostUrl = "http://" +
- //Sm.axx.ip + ":\(Sm.axx.portno)"  + "/postcallback"
+        self.callbackPostUrl = self.callbackBase + "/postcallback"
     }
-    /// make subscripyion
+    /// make subscription
     open func make_subscription (_ myVerifyToken:String) {
         //print("make_subscription for \(myVerifyToken) callback is \(self.callbackPostUrl) ")
         NetClientOps.perform_post_request (
@@ -51,7 +50,6 @@ open class InstagramCredentials {
                                     "&object=user&aspect=media&verify_token=\(myVerifyToken)&callback_url=\(self.callbackPostUrl)",completion:
             { status, body  in
                 guard status == 200 else {
-                    
                     Log.error ("INSTAGRAM SAYS subscription \(myVerifyToken) was unsuccessful \(status)")
                     return
                 }
@@ -61,7 +59,6 @@ open class InstagramCredentials {
                      Log.error ("INSTAGRAM SAYS subscription \(myVerifyToken) was unsuccessful meta \(meta)")
                     return
                 }
-                
                 Log.info("* INSTAGRAM SAYS  subscription \(myVerifyToken) successful")
         })// closure
     }
@@ -80,7 +77,7 @@ open class InstagramCredentials {
         Log.verbose("---->>>>  post callback for user  \(userid)")
         // member must have access token for instagram api access
        MembersCache.getTokenFromID(id: userid) { token in
-            Sm.axx.workers.make_worker_for(id: userid, token: token!)
+            workersMainServer.make_worker_for(id: userid, token: token!)
         }
     }
     
@@ -141,11 +138,8 @@ open class InstagramCredentials {
             paramString: "?client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
                 if let body = body ,  status == 200  {
-                    
                     let( userid , token, smtoken, title, pic ) =  self.processInstagramResponse (body: body)
-            
-                    let w = Sm.axx.workers
-                    w?.make_worker_for(id:userid,token:token)
+                    workersMainServer?.make_worker_for(id:userid,token:token)
                     // w.start(userid,request,response)
                     // see if we can go somewhere interesting
                     
@@ -157,8 +151,6 @@ open class InstagramCredentials {
                         Log.error("Could not redirect to \(tk)")
                     } 
                     completion?(200)
-                
-                
                 }//==200
                 else {
                     Log.error("Bad Status From Instagram   \(status)")
@@ -186,9 +178,6 @@ open class InstagramCredentials {
     open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
     }
-    
- 
-    
    private  func processInstagramResponse(body:Data)->( String , String, String, String, String )  {
         var ret = ("","","","","")
         let jsonBody = JSON(data: body)
@@ -211,12 +200,4 @@ open class InstagramCredentials {
         }
         return ret
     }
-    
-   }
-
-
-
-//
-//
-//
-
+}

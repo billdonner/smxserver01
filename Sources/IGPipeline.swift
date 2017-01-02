@@ -15,21 +15,20 @@ import Foundation
 
 
 // MARK:- Root of All Background NSOperations
-class SoloQForID :OperationQueue {
-    
-    init(_ qid:String) {
-        super.init()
-        self.name = "Queue-\(qid)"
-    }
-}
+
 
 
 open class NsOp: Operation {
+    
+    var opname: String = ""
     weak  var igp:SocialDataProcessor!
     var finalWrapUpOp: FinalWrapUpOp!
     var delegate:IGDataEngineDelegate?
-    var subq: SoloQForID!
-    var opname: String = ""
+    
+    
+    fileprivate var subq: OperationQueue!
+    
+    
     static func aprint(_ s:String) {
         // dispatch_async(dispatch_get_main_queue()) {
         print(s)
@@ -156,7 +155,9 @@ class StartingPipelineOp: NsOp {
         // make a private subordinate nsoperation q for use by onward
         
         self.finalWrapUpOp = FinalWrapUpOp()
-        self.subq = SoloQForID(self.igp.targetID)
+        let t = OperationQueue()
+        t.name =   "Queue-\(self.igp.targetID)"
+        self.subq = t
         self.igp.pipelineStart = Date()
         // run different first op based on opname
         switch self.opname  {

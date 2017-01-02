@@ -21,6 +21,7 @@ import Foundation
 
 //// all varieties of server include these functions to access a remote Membership server in a highly performant manner
 
+
 open class MembersCache {
     class func isMemberFromCache(_ id:String)->Bool {
         return MembersMainServer.m_isMember(id)  // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY

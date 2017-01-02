@@ -113,7 +113,6 @@
 		OBJ_312 /* KituraTemplateEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = OBJ_150 /* KituraTemplateEngine.framework */; };
 		OBJ_325 /* HeliumLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_115 /* HeliumLogger.swift */; };
 		OBJ_327 /* LoggerAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = OBJ_144 /* LoggerAPI.framework */; };
-		OBJ_334 /* Homepage.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_117 /* Homepage.swift */; };
 		OBJ_335 /* IGDataEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_118 /* IGDataEngine.swift */; };
 		OBJ_336 /* IGDateSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_119 /* IGDateSupport.swift */; };
 		OBJ_337 /* IGJsonShim.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_120 /* IGJsonShim.swift */; };
@@ -342,7 +341,6 @@
 		OBJ_112 /* ResponseHeadersSetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseHeadersSetter.swift; sourceTree = "<group>"; };
 		OBJ_113 /* StaticFileServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticFileServer.swift; sourceTree = "<group>"; };
 		OBJ_115 /* HeliumLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeliumLogger.swift; sourceTree = "<group>"; };
-		OBJ_117 /* Homepage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Homepage.swift; sourceTree = "<group>"; };
 		OBJ_118 /* IGDataEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IGDataEngine.swift; sourceTree = "<group>"; };
 		OBJ_119 /* IGDateSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IGDateSupport.swift; sourceTree = "<group>"; };
 		OBJ_12 /* SocketProtocols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketProtocols.swift; sourceTree = "<group>"; };
@@ -599,6 +597,7 @@
 		OBJ_116 /* t5 */ = {
 			isa = PBXGroup;
 			children = (
+				OBJ_139 /* HomePageHTML.swift */,
 				OBJ_118 /* IGDataEngine.swift */,
 				OBJ_119 /* IGDateSupport.swift */,
 				OBJ_120 /* IGJsonShim.swift */,
@@ -606,8 +605,6 @@
 				OBJ_122 /* IGPipeline.swift */,
 				OBJ_123 /* IGPipelineMainOps.swift */,
 				OBJ_125 /* Instagram.swift */,
-				OBJ_117 /* Homepage.swift */,
-				OBJ_139 /* HomePageHTML.swift */,
 				OBJ_126 /* InstagramCredentials.swift */,
 				OBJ_127 /* main.swift */,
 				OBJ_128 /* Matrix.swift */,
@@ -1257,7 +1254,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
-				OBJ_334 /* Homepage.swift in Sources */,
 				OBJ_335 /* IGDataEngine.swift in Sources */,
 				OBJ_336 /* IGDateSupport.swift in Sources */,
 				OBJ_337 /* IGJsonShim.swift in Sources */,

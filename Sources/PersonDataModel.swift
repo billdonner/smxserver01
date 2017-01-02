@@ -40,7 +40,7 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
     // last time we wrote ourselves to disk
     var ouUpdateTime : Date! //
     
-    var ouTotalApiCount: Int = 0
+    var ouTotalApiCalls: Int = 0
     
     //this comes in thru the instagram api
     var ouUserInfo : UserData!
@@ -100,7 +100,7 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         
         // if still here, the version number on Disk matches what we expect from Info.plist
         
-        ouTotalApiCount = aDecoder.decodeObject(forKey: "totalapicount") as? Int ?? 0
+        ouTotalApiCalls = aDecoder.decodeObject(forKey: "totalapicount") as? Int ?? 0
         ouStartTime = aDecoder.decodeObject(forKey: "starttime") as?  Date
         ouUpdateTime = aDecoder.decodeObject(forKey: "updatetime") as?  Date
         ouUserInfo = aDecoder.decodeObject(forKey: "user") as? UserData
@@ -118,7 +118,7 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         aCoder.encode(plistVersion, forKey: "version")
         aCoder.encode(ouStartTime, forKey: "starttime")
         aCoder.encode(ouUpdateTime, forKey: "updatetime")
-        aCoder.encode(ouTotalApiCount, forKey: "totalapicount")
+        aCoder.encode(ouTotalApiCalls, forKey: "totalapicount")
         aCoder.encode(ouUserInfo, forKey: "user")
         aCoder.encode(ouRelationshipToEndUser, forKey: "status")
         aCoder.encode(ouAllFollowers, forKey: "followers")

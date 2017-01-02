@@ -21,7 +21,7 @@ import Foundation
 
 
 /// This "MainServer" is started on its own port via the addHTTPServer Kitura api
-
+var membersMainServer : MembersMainServer!
 class MembersMainServer : MainServer {
     
     var port:Int16 = 0
@@ -36,7 +36,7 @@ class MembersMainServer : MainServer {
         return self.port
     }
     func jsonStatus() -> JSONDictionary {
-        return [:]
+     return ["router-for":"members","port":port,"count":MembersMainServer.members.count] as [String : Any]
     }
 //    }
     
@@ -78,11 +78,7 @@ class MembersMainServer : MainServer {
         }
         return nil
     }
-    
-    
-    
-    
-    
+ 
     //// remote calls
     
     class    func addMembership(_ request:RouterRequest , _ response:RouterResponse) {
@@ -161,9 +157,7 @@ class MembersMainServer : MainServer {
         /// remove from memory and save entire pile
         do {
             members = [:]
-            
-         
-            
+  
             try   save ( )
             
             let dict = ["status":SMaxxResponseCode.success    , "data":[:]   ] as JSONDictionary
@@ -263,10 +257,10 @@ extension Router {
         self.get("/status") {
             request, response, next in
             
-            let r = ["router-for":"workers","port":port] as [String : Any]
+           
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             do {
-                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(mainServer.jsonStatus()).description).end()
             }
             catch {
                 Log.error("Failed to send response \(error)")
@@ -324,13 +318,13 @@ extension Router {
         }
 
         self.get("/showlogin") { request, response, next in
-            Sm.axx.ci.STEP_ONE(response) // will redirect to IG
+            instagramCredentials.STEP_ONE(response) // will redirect to IG
             
             //next()
         }
         self.get("/authcallback") { request, response, next in
             // Log.error("/login/instagram will authenticate ")
-            Sm.axx.ci.STEP_TWO (request, response: response ) { status in
+            instagramCredentials.STEP_TWO (request, response: response ) { status in
                 if status != 200 { Log.error("Back from STEP_TWO status \(status) ") }
             }
             
@@ -338,7 +332,7 @@ extension Router {
         }
         self.get("/unwindor") { request, response, next in
             // just a means of unwinding after login , with data passed via queryparam
-            Sm.axx.ci.STEP_THREE (request, response: response )
+            instagramCredentials.STEP_THREE (request, response: response )
             do {
                 
                 let id = request.queryParameters["smaxx-id"] ?? "no id"

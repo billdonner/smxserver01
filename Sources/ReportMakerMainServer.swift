@@ -69,6 +69,7 @@ func report_memory() -> UInt{
     return 0
     //  }
 }
+var reportMakerMainServer :ReportMakerMainServer!
 class ReportMakerMainServer :MainServer {
     var port:Int16 = 0
     
@@ -81,7 +82,7 @@ class ReportMakerMainServer :MainServer {
         return self.port
     }
     func jsonStatus() -> JSONDictionary {
-        return [:]
+        return  ["router-for":"workers","port":port,"cached":ThePdCache.count] as [String : Any]
     }
 
     /// get skip and limit options from the main URL
@@ -301,10 +302,9 @@ extension Router {
         self.get("/status") {
             request, response, next in
             
-            let r = ["router-for":"workers","port":port,"cached":ThePdCache.count] as [String : Any]
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             do {
-                try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
+                try response.status(HTTPStatusCode.OK).send(JSON(mainServer.jsonStatus()).description).end()
             }
             catch {
                 Log.error("Failed to send response \(error)")

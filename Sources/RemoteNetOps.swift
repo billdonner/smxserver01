@@ -20,6 +20,10 @@ import Foundation
 
 
 struct RemoteNetOps {
+    
+   static  var xxsession: URLSession = URLSession(configuration: URLSessionConfiguration.default) // just one session
+    
+    
     static func decodeData(_ sdata:Data) -> JSON {
         
             let jsonBody = JSON(data: sdata)
@@ -29,7 +33,7 @@ struct RemoteNetOps {
     
     fileprivate static func dataTask(_ request: NSMutableURLRequest, method: String, completion: @escaping NetCompletionFunc) {
         request.httpMethod = method
-        Sm.axx.session.dataTask(with:request as URLRequest) { (data, response, error) -> Void in
+        xxsession.dataTask(with:request as URLRequest) { (data, response, error) -> Void in
             
             if let response = response as? HTTPURLResponse {
                 let responsecode = response.statusCode
