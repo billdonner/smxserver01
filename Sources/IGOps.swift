@@ -12,13 +12,37 @@
 //  Copyright © 2016 SocialMax. All rights reserved.
 //
 import LoggerAPI
+import Kitura
 import KituraNet
+import SwiftyJSON
 import Foundation
 
 
 struct IGOps {
     
     static var apiCount = 0
+    
+    
+    static func discoverIpAddress(completion:@escaping (String)->()) {
+        
+        /// first get our ip address from: "https://api.ipify.org?format=json"
+        
+        NetClientOps.perform_get_request(schema:"https",
+                                         host:"api.ipify.org",port:443,
+                                         path:"?format=json")
+        { status,body  in
+            if status == 200 {
+                let jsonBody = JSON(data: body!)
+                if let ip = jsonBody["ip"].string {
+                    completion(ip )
+                }
+                else {
+                    fatalError("no ip address for this Kitura Server instance, status is \(status)")
+                }
+            }
+        }
+    }
+
     
     private static func get_token_for_member(_ targetID:String) throws -> String  {
         
@@ -448,10 +472,73 @@ extension IGOps { // networking
                 }
             }()
             
-            let baseurl = URL(string: Sm.axx.baseURLString)!
+            let baseurl = URL(string:  baseURLString)!
             let fullurl = baseurl.appendingPathComponent(result.path)
             let encodedrequest = RemoteNetOps.encodedRequest(fullurl, params: result.parameters)
             return encodedrequest
         }
     }
 }
+
+
+struct AppResponses {
+    
+    static  func missingID(_ response:RouterResponse) {
+        response.status(HTTPStatusCode.badRequest)
+        Log.error("Request does not contain ID")
+        return
+    }
+    
+    /// log error and reply with bad status to user
+    static func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
+        do {
+            let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
+            Log.error("badrequest \(rqst)")
+            let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
+            try sendbadresponse(response, item)
+            
+        }
+        catch {
+            Log.error("Could not send rejectduetobadrequest ")
+        }
+    }
+    static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
+        do {
+            let  item =   ["status":code as AnyObject]
+            try sendgooresponse(response,item )
+            
+            //Log.error("Did send acceptgoodrequest")
+            
+        }
+        catch {
+            Log.error("Could not send acceptgoodrequest")
+        }
+    }
+    static func sendgooresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws {
+        // item:JSONDictionary) {
+        do {
+            
+            let r = response.status(HTTPStatusCode.OK)
+            let _ =   try r.send(JSON(item).description).end()
+            //Log.error("Did send acceptgoodrequest")
+        }
+        catch {
+            Log.error("Could not send acceptgoodrequest")
+        }
+    }
+    static func sendbadresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws { // item:JSONDictionary) {
+        do {
+            
+            let r = response.status(HTTPStatusCode.badRequest)
+            let _ =   try r.send(JSON(item).description).end()
+        }
+        catch {
+            Log.error("Could not send sendbadresponse")
+        }
+    }
+    
+}
+
+///
+
+

@@ -25,12 +25,24 @@ import SwiftyJSON
 import LoggerAPI
 import Foundation
 
-typealias JSONDictionary = [String: Any]
 
-protocol MainServer {
-    func mainPort() -> Int16
-    func jsonStatus() -> JSONDictionary
-    
+let baseURLString = "https://api.instagram.com"
+
+public typealias JSONDictionary = [String: Any]
+
+// unclear why
+//public protocol MainServer {
+//    func mainPort() -> Int16
+//    func jsonStatus() -> JSONDictionary
+//}
+
+open class  MainServer : NSObject {
+    func mainPort() -> Int16 {
+        fatalError()
+    }
+    func jsonStatus() -> JSONDictionary {
+        fatalError()
+    }
 }
 func ciFor(_ tag:String) -> InstagramCredentials {
     
@@ -57,74 +69,10 @@ func ciFor(_ tag:String) -> InstagramCredentials {
 }
 
 
-struct AppResponses {
+//open class Sm {
+struct Smaxx {
     
-    static  func missingID(_ response:RouterResponse) {
-        response.status(HTTPStatusCode.badRequest)
-        Log.error("Request does not contain ID")
-        return
-    }
-    
-    /// log error and reply with bad status to user
-    static func rejectduetobadrequest(_ response:RouterResponse,status:Int,mess:String?=nil) {
-        do {
-            let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
-            Log.error("badrequest \(rqst)")
-            let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
-            try sendbadresponse(response, item)
-            
-        }
-        catch {
-            Log.error("Could not send rejectduetobadrequest ")
-        }
-    }
-    static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
-        do {
-            let  item =   ["status":code as AnyObject]
-            try sendgooresponse(response,item )
-            
-            //Log.error("Did send acceptgoodrequest")
-            
-        }
-        catch {
-            Log.error("Could not send acceptgoodrequest")
-        }
-    }
-    static func sendgooresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws {
-        // item:JSONDictionary) {
-        do {
-            
-            let r = response.status(HTTPStatusCode.OK)
-            let _ =   try r.send(JSON(item).description).end()
-            //Log.error("Did send acceptgoodrequest")
-        }
-        catch {
-            Log.error("Could not send acceptgoodrequest")
-        }
-    }
-    static func sendbadresponse(_ response:RouterResponse, _ item:JSONDictionary  ) throws { // item:JSONDictionary) {
-        do {
-            
-            let r = response.status(HTTPStatusCode.badRequest)
-            let _ =   try r.send(JSON(item).description).end()
-        }
-        catch {
-            Log.error("Could not send sendbadresponse")
-        }
-    }
-    
-}
-
-///
-
-open class Sm {
-    
-    class var axx: Sm {
-        struct Axx { static let smg = Sm() }
-        return Axx.smg
-    }
     let started = "\(Date())"
-    let baseURLString = "https://api.instagram.com"
     var packagename = "t5"
     var servertag = "-unassigned-"
     var portno:Int16  = 8090
@@ -133,10 +81,8 @@ open class Sm {
     var title = "SocialMaxx@UnspecifiedSite"
     var ip = "127.0.0.1"
     var verificationToken = ""
-
     
     func status () -> JSONDictionary  {
-        
         let a : JSONDictionary  = [ "router-for":"webpages+auth"  ,
                                     "software-verision":version   ,
                                     "instagram-api-url":baseURLString   ,
@@ -152,29 +98,7 @@ open class Sm {
             ]
         return a
     }
-    
 }
-
-func discoverIpAddress(completion:@escaping (String)->()) {
-    
-    /// first get our ip address from: "https://api.ipify.org?format=json"
-    
-    NetClientOps.perform_get_request(schema:"https",
-                                     host:"api.ipify.org",port:443,
-                                     path:"?format=json")
-    { status,body  in
-        if status == 200 {
-            let jsonBody = JSON(data: body!)
-            if let ip = jsonBody["ip"].string {
-                completion(ip )
-            }
-        else {
-            fatalError("no ip address for this Kitura Server instance, status is \(status)")
-        }
-        }
-    }
-}
-
 
 
 
@@ -183,54 +107,28 @@ func discoverIpAddress(completion:@escaping (String)->()) {
 //    NetClientOps.perform_get_request(schema:"https",host:"api.ipify.org",port:443,path:"?format=json")
 
 
-/// command line arguments are xxx portno modes servertag title
-func process_commandline() {
-    let arguments = ProcessInfo.processInfo.arguments
-    guard arguments.count >= 5  else {
-        
-        // no args, use some reasonable defaults
-        print("  -- usage for all SocialMaxx Servers\n        .build/debug/\(Sm.axx.packagename) servertag portno modes title")
-        print("          servertag = one of prod or dev ; selects IG App Credentials")
-        print("          portno = choose any for this Kitura Server instance")
-        print("          modes = one or more of reports,membership,workers")
-        print("          title = a banner for Front Panel pages")
-        
-        print("\n  -- eg \n")
-        print("       .build/debug/\(Sm.axx.packagename)  DEV 8090 reports,membership,workers socialmaxx.sytes.net \n")
-        print("       .build/debug/\(Sm.axx.packagename)  PROD 8094 reports,membership,workers socialmaxx.net  \n")
-        exit(0)
-        
-    }
-    
-    Sm.axx.servertag =  arguments[1]
-    instagramCredentials = ciFor(arguments[1])
-    Sm.axx.portno  =  Int16(arguments[2]) ?? 8090
-    Sm.axx.modes =  arguments[3].components(separatedBy: ",")
-    Sm.axx.title =  arguments[4]
-}
-
-
-
 
 /// start 1-4 servers based on the flavor modes passed on the startup command line
 ///   - at this time the servers are started on sequential ports
 
-///
-/// The Kitura router
-///
+
+/// command line arguments are xxx portno modes servertag title
+
+
+
 
 ///
 /// Setup routes - according to global modes setup from command line
 ///
 
-func setupRoutersAndServers() {
-    let flavors = Sm.axx.modes
-    var httpServerPort = Sm.axx.portno+1 // leave one for main server
+func setupRoutersAndServers(_ smaxx:Smaxx) {
+    let flavors = smaxx.modes
+    var httpServerPort = smaxx.portno+1 // leave one for main server
     
     if flavors.contains("reports") {
-        let rserver = ReportMakerMainServer(port:httpServerPort)
+        let rserver = ReportMakerMainServer(port:httpServerPort,smaxx:smaxx)
         let rrouter = Router()
-        rrouter.setupRoutesForReports(mainServer:rserver)
+        rrouter.setupRoutesForReports(mainServer:rserver , smaxx:smaxx)
         let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: rrouter)
         srv.started { [unowned rrouter] in
             reportMakerMainServer = rserver
@@ -241,9 +139,9 @@ func setupRoutersAndServers() {
     if flavors.contains("membership") {
         //
         
-        let members = MembersMainServer(port:httpServerPort)
+        let members = MembersMainServer(port:httpServerPort,tag:smaxx.servertag,  smaxx:smaxx )
         let mrouter = Router()
-        mrouter.setupRoutesForMembership(mainServer:members)
+        mrouter.setupRoutesForMembership(mainServer:members , smaxx:smaxx)
         let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: mrouter)
         srv.started { [unowned members] in
             membersMainServer = members
@@ -252,26 +150,26 @@ func setupRoutersAndServers() {
         httpServerPort += 1
     }
     if flavors.contains("workers") {
-        //let workers = Sm.axx.workers
-        let  workers = WorkersMainServer(port:httpServerPort)
+        //let workers = smaxx.workers
+        let  workers = WorkersMainServer(port:httpServerPort, smaxx:smaxx)
         let wrouter = Router()
-        wrouter.setupRoutesForWorkers(mainServer:workers)
+        wrouter.setupRoutesForWorkers(mainServer:workers, smaxx:smaxx)
         let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: wrouter)
         srv.started { [unowned wrouter] in
             workersMainServer = workers
-  print("workers \(wrouter) starting on port \(workersMainServer.mainPort())")
+            print("workers \(wrouter) starting on port \(workersMainServer.mainPort())")
         }
         httpServerPort += 1
     }
     /// this gets started unconditionally
-        let rserver = HomePageMainServer(port:httpServerPort)
+    let rserver = HomePageMainServer(port:httpServerPort,servertag:smaxx.servertag,smaxx:smaxx)
     let mainplainrouter = Router()
-    mainplainrouter.setupRoutesPlain(mainServer:rserver)
-    let srv = Kitura.addHTTPServer(onPort: Int(Sm.axx.portno), with: mainplainrouter)
+    mainplainrouter.setupRoutesPlain(mainServer:rserver , smaxx:smaxx)
+    let srv = Kitura.addHTTPServer(onPort: Int(smaxx.portno), with: mainplainrouter)
     srv.started { [unowned mainplainrouter] in
         /// put an informative banner right into the log
         print("main \(mainplainrouter) starting on port \(rserver.mainPort())")
-  
+        
     }
 }
 
@@ -280,35 +178,70 @@ func setupRoutersAndServers() {
 /// Set up a simple Logger
 ///
 
+
 Log.logger = HeliumLogger()
-discoverIpAddress() { ip in
+
+/// get our IP address, dont bother if we cant
+IGOps.discoverIpAddress() { ip in
+    
+    
+    var smaxx = Smaxx()
     
     /// make token from ip address
     
-    Sm.axx.ip = ip
+    smaxx.ip = ip
     
     let x =  ip.components(separatedBy: ".").joined(separator: "") // strip dots
-    let verificationToken = "\(Sm.axx.servertag)\(Sm.axx.portno)\(x)"
+    let verificationToken = "\(smaxx.servertag)\(smaxx.portno)\(x)"
     
-    Sm.axx.verificationToken = verificationToken
+    smaxx.verificationToken = verificationToken
     /// once we have an ip address we can
     /// setup subscription subscription from instagram
     
     
     instagramCredentials.make_subscription(verificationToken)
     
-    //instagramCredentials.make_subscription(verificationToken)
+    
     
     // log what's going on
     
-    Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version)  **********************")
-    Log.info("** \(NSDate()) on \(Sm.axx.packagename) \(Sm.axx.ip):\( Sm.axx.portno) serving \( Sm.axx.modes.joined(separator: ","))")
-    Log.info("*****************  \(Sm.axx.title)(\(Sm.axx.servertag)) \(Sm.axx.version) **********************")
-
-process_commandline()
-setupRoutersAndServers()
-Kitura.run()
-
+    Log.info("*****************  \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version)  **********************")
+    Log.info("** \(NSDate()) on \(smaxx.packagename) \(smaxx.ip):\( smaxx.portno) serving \( smaxx.modes.joined(separator: ","))")
+    Log.info("*****************  \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version) **********************")
+    
+    let arguments = ProcessInfo.processInfo.arguments
+    guard arguments.count >= 5  else {
+        
+        // no args, use some reasonable defaults
+        print("  -- usage for all SocialMaxx Servers\n        .build/debug/\(smaxx.packagename) servertag portno modes title")
+        print("          servertag = one of prod or dev ; selects IG App Credentials")
+        print("          portno = choose any for this Kitura Server instance")
+        print("          modes = one or more of reports,membership,workers")
+        print("          title = a banner for Front Panel pages")
+        
+        print("\n  -- eg \n")
+        print("       .build/debug/\(smaxx.packagename)  DEV 8090 reports,membership,workers socialmaxx.sytes.net \n")
+        print("       .build/debug/\(smaxx.packagename)  PROD 8094 reports,membership,workers socialmaxx.net  \n")
+        exit(0)
+        
+    }
+    
+    
+    smaxx.servertag =  arguments[1]
+    instagramCredentials = ciFor(arguments[1])
+    smaxx.portno  =  Int16(arguments[2]) ?? 8090
+    smaxx.modes =  arguments[3].components(separatedBy: ",")
+    smaxx.title =  arguments[4]
+    
+    /// finally, after absorbing the environment, set up kitura
+    setupRoutersAndServers(smaxx )
+    
+    ///
+    /// The Kitura router
+    ///
+    
+    Kitura.run()
+    
 }
 
 /// deliberately but strangely, this runs off the bottom

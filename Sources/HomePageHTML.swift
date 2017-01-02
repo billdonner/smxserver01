@@ -53,45 +53,35 @@ class BasicAuthMiddleware: RouterMiddleware {
     }
 }
 
+
+
 ///
 /// MARK:-   Sets up all the routes according to flavor modes
 ///
 var homePageMainServer:HomePageMainServer!
+
 class HomePageMainServer:MainServer {
-    func jsonStatus() -> JSONDictionary {
+    
+    override func jsonStatus() -> JSONDictionary {
         return [:]
     }
-    
+    var servertag:String = ""
     var port:Int16 = 0
-    
-    init(port:Int16) {
+    var smaxx:Smaxx
+    init(port:Int16,servertag:String,smaxx:Smaxx) {
         self.port = port
+        self.servertag = servertag
+        self.smaxx = smaxx
     }
-    
-    
-    func mainPort() -> Int16 {
+    override func mainPort() -> Int16 {
         return self.port
     }
-    static func staticPath()->String {
-        return documentsPath() + "/_smaxx-static/"  + Sm.axx.servertag
-    }
-    static func membershipPath()->String {
-        return documentsPath() + "/_membership/"
-    }
-    fileprivate static func documentsPath()->String {
-        
-        
-        let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
-        let docDir = docurl.path
-        return docDir
-    }
-    // all the action is in the router extension
     
 } // end of HomePageMainServer
 
 extension Router {
     
-    func setupRoutesPlain(mainServer:MainServer) {
+    func setupRoutesPlain(mainServer:HomePageMainServer,smaxx:Smaxx) {
         
         // must support MainServer protocol
         
@@ -101,7 +91,7 @@ extension Router {
         self.all(middleware: BasicAuthMiddleware())
         self.all("/*", middleware: BodyParser())
         self.all("/*", middleware: AllRemoteOriginMiddleware())
-        let staticFileServer = StaticFileServer(path:  HomePageMainServer.staticPath())
+        let staticFileServer = StaticFileServer(path:  membersMainServer.store.staticPath())
         //, options: [:], customResponseHeadersSetter: nil)
         
         //StaticFileServer(path: ModelData.staticPath(), options: nil)
@@ -119,30 +109,12 @@ extension Router {
         }
         
         
-        //            router.get("/authcallback") { request, response, next in
-        //                response.headers["Content-Type"] = "text/html; charset=utf-8"
-        //
-        //                // Log.error("STEP_ONE /login/instagram/callback will authenticate ")
-        //                // there should be a code here l so this will redirect as per step one
-        //                Sm.axx.ci.authenticate (request: request, response: response) { status in
-        //                    guard status == 200  else { Log.error("Back from callback authenticate bad status \(status) "); return }
-        //                    do {
-        //                        try response.redirect("/")
-        //                    }
-        //                    catch {
-        //                        Log.error("Failed /authcallback redirect \(error)")
-        //                    }
-        //                }
-        //                next()
-        //
-        //            }
-        
         ///
         // MARK:- Show Status
         ///
         self.get("/status") {
             request, response, next in
-            HomePageMainServer.buildStatus(request,response)
+            homePageMainServer.buildStatus(request,response)
             next()
         }
         self.get("/log") {
@@ -162,7 +134,7 @@ extension Router {
         }
         self.get("/postcallback") {
             request, response, next in
-            instagramCredentials.handle_get_callback(Sm.axx.verificationToken,request: request,response: response)
+            instagramCredentials.handle_get_callback(smaxx.verificationToken,request: request,response: response)
             next()
         }
         
@@ -171,7 +143,7 @@ extension Router {
         ///
         self.get("/fp") {
             request, response, next in
-            HomePageMainServer.buildFrontPage(request,response)
+              homePageMainServer.buildFrontPage(request,response)
             next()
         }
         
@@ -182,7 +154,7 @@ extension Router {
         
         self.get("/") {
             request, response, next in
-            HomePageMainServer.buildHomePage(request,response)
+             homePageMainServer.buildHomePage(request,response)
             next()
         }
         
@@ -235,16 +207,16 @@ extension Router {
 ///
 extension HomePageMainServer{
     
-    fileprivate static func standard_footer()->String {
-        let s = Sm.axx.modes.joined(separator: "+")
-        return    "<footer><caption>\(Sm.axx.ip):\(Sm.axx.portno)-\(Sm.axx.servertag)-\(s) \(Sm.axx.packagename) version:-\(Sm.axx.version) </caption>" +
+    fileprivate  func standard_footer()->String {
+        let s = smaxx.modes.joined(separator: "+")
+        return    "<footer><caption>\(smaxx.ip):\(smaxx.portno)-\(smaxx.servertag)-\(s) \(smaxx.packagename) version:-\(smaxx.version) </caption>" +
             "<p>built on <a href = 'https://swift.org'>Swift 3</a>, <a href = 'https://github.com/IBM-Swift/Kitura'>Kitura Web Server</a>, <a href = 'http://www.noip.com'>no-IP.com</a>, <a href = 'https://runstatus.com'>runstatus.com</a>, <a href = 'https://centralops.net'>centralops.net</a></caption> and <a href = 'https://centralops.net'>OS X 10.11 El Capitan</a></caption>" + "<br/><caption>this page produced at \(Date()) <a href='/fp'>Front Panel</a> <a href = '/status'>status</a></caption></footer></body> </html>"
     }
     
-    fileprivate static  func standard_header()->String {
+    fileprivate   func standard_header()->String {
         return  "<!DOCTYPE html><head>" +
             " <meta charset='UTF-8' />" +
-            " <title>\(Sm.axx.title) App Service </title>" +
+            " <title>\(smaxx.title) App Service </title>" +
             " <meta name='HandheldFriendly' content='True' />" +
             " <meta name='MobileOptimized' content='320' />" +
             " <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0' />" +
@@ -253,9 +225,9 @@ extension HomePageMainServer{
         "footer {font-size:.6em} </style></head><body>"
     }
     
-    static func frontpanel1(_ idstr:String,serverip:String)->String {
+     func frontpanel1(_ idstr:String,serverip:String)->String {
         return standard_header() +
-            " <h1>\(Sm.axx.title) Reports for \(idstr)</h1>" +
+            " <h1>\(smaxx.title) Reports for \(idstr)</h1>" +
             "<p><a href = '/fp'>back to front panel</a></p>" +
             "<h3>reports testbed</h3>" +
             "<p><a href = '/reports/\(idstr)/top-posts'>top-posts</a> - json report </p>" +
@@ -284,9 +256,9 @@ extension HomePageMainServer{
             standard_footer()
         
     }
-    static func frontpanel2(_ serverip:String )->String {
+     func frontpanel2(_ serverip:String )->String {
         return standard_header() +
-            " <h1>\(Sm.axx.title) Membership Administration</h1>" +
+            " <h1>\(smaxx.title) Membership Administration</h1>" +
             
             "<p><a href = '/fp'>back to front panel</a></p>" +
             "<h3>membership testbed</h3>" +
@@ -304,9 +276,9 @@ extension HomePageMainServer{
             
             standard_footer()
     }
-    static func frontpanel (_ serverip:String )->String {
+     func frontpanel (_ serverip:String )->String {
         
-        let flavors = Sm.axx.modes
+        let flavors = smaxx.modes
         let reps =   ""
         let mems = flavors.contains("membership") ?
             
@@ -330,7 +302,7 @@ extension HomePageMainServer{
             "<p><a href = '/workers/stop/273260628'>stop worker anon</a> - cold</p>"  :"(no workers on this server)"
         
         
-        let headline = "<h1>\(Sm.axx.title) Front Panel<h1><h2>App Service \(Sm.axx.version)</h1>"
+        let headline = "<h1>\(smaxx.title) Front Panel<h1><h2>App Service \(smaxx.version)</h1>"
         
         let monitor =
             "<h3>monitor live networks</h3>" +
@@ -343,9 +315,9 @@ extension HomePageMainServer{
         return standard_header() + headline + mems + wks + reps + monitor +  standard_footer()
         
     }
-    static func homepage(_ serverip:String )->String {
+     func homepage(_ serverip:String )->String {
         var s:String
-        let url = HomePageMainServer.staticPath() + "/body.html"
+        let url = membersMainServer.store.staticPath() + "/body.html"
         do {
             s = try String(contentsOfFile:  url )
         }
@@ -353,14 +325,14 @@ extension HomePageMainServer{
             s = "?no body found in \(url)?"
         }
         return standard_header() +
-            "<h1>\(Sm.axx.title)</h1>" + s  +
+            "<h1>\(smaxx.title)</h1>" + s  +
             standard_footer()
     }
     
     
-    static    func buildStatus(_ request:RouterRequest,_ response:RouterResponse) {
+        func buildStatus(_ request:RouterRequest,_ response:RouterResponse) {
         
-        let r = Sm.axx.status()
+        let r = smaxx.status()
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         do {
             try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()
@@ -371,17 +343,17 @@ extension HomePageMainServer{
     }
     
     /// show homepage
-    static   func buildFrontPage(_ request:RouterRequest,_ response:RouterResponse) {
+       func buildFrontPage(_ request:RouterRequest,_ response:RouterResponse) {
         var buf = ""
-        let serverip = Sm.axx.ip
+        let serverip = smaxx.ip
         if  let id  = request.queryParameters["id"] {
-            buf = HomePageMainServer.frontpanel1(id,serverip:serverip)
+            buf = self.frontpanel1(id,serverip:serverip)
         }
         else      if  let _  = request.queryParameters["admin"] {
-            buf = HomePageMainServer.frontpanel2(serverip)
+            buf = self.frontpanel2(serverip)
         }
         else {
-            buf = HomePageMainServer.frontpanel(serverip)
+            buf = self.frontpanel(serverip)
         }
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
@@ -392,10 +364,10 @@ extension HomePageMainServer{
         }
     }
     
-    static    func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) {
+        func buildHomePage(_ request:RouterRequest,_ response:RouterResponse) {
         
-        let serverip = Sm.axx.ip
-        let buf = HomePageMainServer.homepage(serverip)
+        let serverip = smaxx.ip
+        let buf = self.homepage(serverip)
         response.headers["Content-Type"] =  "text/html; charset=utf-8"
         do {
             try response.status(HTTPStatusCode.OK).send(buf).end()
@@ -405,3 +377,23 @@ extension HomePageMainServer{
         }
     }
 }
+
+
+
+//            router.get("/authcallback") { request, response, next in
+//                response.headers["Content-Type"] = "text/html; charset=utf-8"
+//
+//                // Log.error("STEP_ONE /login/instagram/callback will authenticate ")
+//                // there should be a code here l so this will redirect as per step one
+//                smaxx.ci.authenticate (request: request, response: response) { status in
+//                    guard status == 200  else { Log.error("Back from callback authenticate bad status \(status) "); return }
+//                    do {
+//                        try response.redirect("/")
+//                    }
+//                    catch {
+//                        Log.error("Failed /authcallback redirect \(error)")
+//                    }
+//                }
+//                next()
+//
+//            }

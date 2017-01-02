@@ -32,15 +32,15 @@ fileprivate var activeWorkers: [String:String] = [:]
 
     var port:Int16 = 0
     
-    init(port:Int16) {
+    init(port:Int16,smaxx:Smaxx) {
         self.port = port
     }
     
     
-    func mainPort() -> Int16 {
+    override func mainPort() -> Int16 {
         return self.port
     }
-    func jsonStatus() -> JSONDictionary {
+    override func jsonStatus() -> JSONDictionary {
         return ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
     }
     
@@ -166,7 +166,7 @@ fileprivate var activeWorkers: [String:String] = [:]
 
 extension Router{
     
-    func setupRoutesForWorkers( mainServer:MainServer) {
+    func setupRoutesForWorkers( mainServer:MainServer,smaxx:Smaxx) {
         
         // must support MainServer protocol
         

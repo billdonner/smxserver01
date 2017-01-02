@@ -19,23 +19,47 @@ import SwiftyJSON
 import Foundation
 
 
-
+struct  FS {
+    let servertag : String
+    
+    func staticPath()->String {
+        return documentsPath() + "/_smaxx-static/"  + self.servertag
+    }
+    func membershipPath()->String {
+        return documentsPath() + "/_membership/"
+    }
+    fileprivate func documentsPath()->String {
+        
+        
+        let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
+        let docDir = docurl.path
+        return docDir
+    }
+    //  all the action is in the router extension
+}
 /// This "MainServer" is started on its own port via the addHTTPServer Kitura api
 var membersMainServer : MembersMainServer!
+
 class MembersMainServer : MainServer {
     
-    var port:Int16 = 0
+    var store:FS
+    var port:Int16
+    var servertag:String
+    var smaxx:Smaxx
     
-    init(port:Int16) {
+    init(port:Int16,tag:String,smaxx:Smaxx) {
         self.port = port
+        self.servertag = tag
+        self.store = FS(servertag: tag)
+        self.smaxx = smaxx
     }
     
   static var members :   [String:AnyObject] = [:] // not jsondictionary
 
-    func mainPort() -> Int16 {
+    override func mainPort() -> Int16 {
         return self.port
     }
-    func jsonStatus() -> JSONDictionary {
+    override func jsonStatus() -> JSONDictionary {
      return ["router-for":"members","port":port,"count":MembersMainServer.members.count] as [String : Any]
     }
 //    }
@@ -201,7 +225,7 @@ class MembersMainServer : MainServer {
     ///
     /// restore from keyed archive plist
     fileprivate class func restoreme(_ userID:String) throws ->   JSONDictionary {
-        let spec = HomePageMainServer.membershipPath() +  "\(userID).smaxx"
+        let spec = membersMainServer.store.membershipPath() +  "\(userID).smaxx" //singleton instance
         do {
             if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?    JSONDictionary {
                 return pdx
@@ -228,7 +252,7 @@ class MembersMainServer : MainServer {
     }
     /// save as keyed archive plist
    class func save ( ) throws {         let start = Date()
-        let spec = HomePageMainServer.membershipPath() +  "_MembersCachesmaxx"
+        let spec = membersMainServer.store.membershipPath() +  "_MembersCachesmaxx" // singleton instance
         if  !NSKeyedArchiver.archiveRootObject(["status":SMaxxResponseCode.success ,"data": members],
                                                toFile:spec ){
             throw SMaxxError.cantWriteMembership(message: spec )
@@ -242,7 +266,7 @@ class MembersMainServer : MainServer {
 
 extension Router {
     
-     func setupRoutesForMembership( mainServer:MainServer) {
+     func setupRoutesForMembership( mainServer:MembersMainServer, smaxx:Smaxx) {
             
             // must support MainServer protocol
             

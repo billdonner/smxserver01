@@ -70,18 +70,22 @@ func report_memory() -> UInt{
     //  }
 }
 var reportMakerMainServer :ReportMakerMainServer!
-class ReportMakerMainServer :MainServer {
+
+
+class ReportMakerMainServer : MainServer {
     var port:Int16 = 0
+    var smaxx:Smaxx 
     
-    init(port:Int16) {
+    init(port:Int16,smaxx:Smaxx) {
         self.port = port
+        self.smaxx = smaxx
     }
     
     
-    func mainPort() -> Int16 {
+    override func mainPort() -> Int16 {
         return self.port
     }
-    func jsonStatus() -> JSONDictionary {
+    override func jsonStatus() -> JSONDictionary {
         return  ["router-for":"workers","port":port,"cached":ThePdCache.count] as [String : Any]
     }
 
@@ -212,7 +216,7 @@ fileprivate     class func reportsDict()->JSONDictionary {
 fileprivate  class func generate_and_send_report (_ id:String,token:String, reportname:String,limit:Int, skip:Int, bypasscache:Bool = false ) -> JSONDictionary {
     let firstmem: UInt = report_memory()
     let start = Date()
-    let path = HomePageMainServer.membershipPath() + id + ".smaxx"
+    let path = membersMainServer.store.membershipPath() + id + ".smaxx"
     var pdx: PersonData!
     if bypasscache == true {
         if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
@@ -290,7 +294,7 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
 }// func report
 }
 extension Router {
-     func setupRoutesForReports( mainServer:MainServer) {
+     func setupRoutesForReports(mainServer:ReportMakerMainServer, smaxx:Smaxx) {
             
             // must support MainServer protocol
             
