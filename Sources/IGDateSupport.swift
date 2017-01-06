@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///

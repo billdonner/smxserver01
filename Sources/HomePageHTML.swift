@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -53,18 +53,47 @@ class BasicAuthMiddleware: RouterMiddleware {
     }
 }
 
+/// HomePage Routes
+
+///
+/// post("/postcallback") -- to and from ig 
+/// get("/postcallback")  -- to and from ig
+
+/// get("/fp") -- front panel html homepage
+/// get("/") -- a plain homepage
+///
+/// get("/log") 
+///
+/// all("/_/", middleware: staticFileServer) 
 
 
+
+
+///
 ///
 /// MARK:-   Sets up all the routes according to flavor modes
 ///
-var homePageMainServer:HomePageMainServer!
-
-class HomePageMainServer:MainServer {
+class HomePageMainServer:SeparateServer {
     
-    override func jsonStatus() -> JSONDictionary {
-        return [:]
+    struct  FSforHP {
+        let servertag : String
+        
+        func staticPath()->String {
+            return documentsPath() + "/_smaxx-static/"  + self.servertag
+        }
+      private func documentsPath()->String {
+            
+            
+            let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
+            let docDir = docurl.path
+            return docDir
+        }
+        //  all the action is in the router extension
     }
+
+
+    var store:FSforHP
+    
     var servertag:String = ""
     var port:Int16 = 0
     var smaxx:Smaxx
@@ -72,9 +101,20 @@ class HomePageMainServer:MainServer {
         self.port = port
         self.servertag = servertag
         self.smaxx = smaxx
+        self.store = FSforHP(servertag: servertag)
     }
-    override func mainPort() -> Int16 {
+     func mainPort() -> Int16 {
         return self.port
+    }
+    
+    func jsonStatus() -> JSONDictionary {
+        return [ "router-for":"webpages+auth"  ,"port":port,
+                 "software-verision":smaxx.version   ,
+                 "instagram-api-url":instagramBaseURLString   ,
+                 "smaxx-server-ip":smaxx.ip   ,
+                 "packagename":smaxx.packagename   ,
+                 "servertag":servertag   ,
+                 "apicalls":IGOps.apiCount] as [String : Any]
     }
     
 } // end of HomePageMainServer
@@ -85,13 +125,13 @@ extension Router {
         
         // must support MainServer protocol
         
-        let port = mainServer.mainPort()
-        print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
+       // let port = mainServer.mainPort()
+       // print("*** setting up Plain Pages and IG Callbacks  on port \(port) ***")
         
         self.all(middleware: BasicAuthMiddleware())
         self.all("/*", middleware: BodyParser())
         self.all("/*", middleware: AllRemoteOriginMiddleware())
-        let staticFileServer = StaticFileServer(path:  membersMainServer.store.staticPath())
+        let staticFileServer = StaticFileServer(path:  homePageMainServer.store.staticPath())
         //, options: [:], customResponseHeadersSetter: nil)
         
         //StaticFileServer(path: ModelData.staticPath(), options: nil)
@@ -317,7 +357,7 @@ extension HomePageMainServer{
     }
      func homepage(_ serverip:String )->String {
         var s:String
-        let url = membersMainServer.store.staticPath() + "/body.html"
+        let url = homePageMainServer.store.staticPath() + "/body.html"
         do {
             s = try String(contentsOfFile:  url )
         }
@@ -328,11 +368,13 @@ extension HomePageMainServer{
             "<h1>\(smaxx.title)</h1>" + s  +
             standard_footer()
     }
+
     
+
     
         func buildStatus(_ request:RouterRequest,_ response:RouterResponse) {
         
-        let r = smaxx.status()
+        let r = jsonStatus()
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         do {
             try response.status(HTTPStatusCode.OK).send(JSON(r).description).end()

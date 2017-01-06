@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -13,36 +13,46 @@
 
 import Kitura
 import KituraNet
-//import KituraSys
 import LoggerAPI
 import SwiftyJSON
 import Foundation
 
+/// Members routes:
+///
+/// get("/membership") -- full list
+/// delete("/membership") - delete all
+/// get("/membership/:id")
+/// delete("/membership/:id")
+/// post("/membership")
 
-struct  FS {
-    let servertag : String
-    
-    func staticPath()->String {
-        return documentsPath() + "/_smaxx-static/"  + self.servertag
-    }
-    func membershipPath()->String {
-        return documentsPath() + "/_membership/"
-    }
-    fileprivate func documentsPath()->String {
-        
-        
-        let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
-        let docDir = docurl.path
-        return docDir
-    }
-    //  all the action is in the router extension
-}
-/// This "MainServer" is started on its own port via the addHTTPServer Kitura api
-var membersMainServer : MembersMainServer!
+/// get("/showlogin") - step one in instagram credentials
+/// get("/authcallback") - from ig
+/// get("/unwindor") - when done
 
-class MembersMainServer : MainServer {
+
+/// This "SeparateServer" is started on its own port via the addHTTPServer Kitura api
+
+class MembersMainServer : SeparateServer {
     
-    var store:FS
+    struct  FSforMembers {
+        let servertag : String
+        
+   
+        func membershipPath()->String {
+            return documentsPath() + "/_membership/"
+        }
+        fileprivate func documentsPath()->String {
+            
+            
+            let docurl =  FileManager.default.urls(for:.documentDirectory, in: .userDomainMask)[0]
+            let docDir = docurl.path
+            return docDir
+        }
+        //  all the action is in the router extension
+    }
+    
+    
+    var store:FSforMembers
     var port:Int16
     var servertag:String
     var smaxx:Smaxx
@@ -50,37 +60,37 @@ class MembersMainServer : MainServer {
     init(port:Int16,tag:String,smaxx:Smaxx) {
         self.port = port
         self.servertag = tag
-        self.store = FS(servertag: tag)
+        self.store = FSforMembers(servertag: tag)
         self.smaxx = smaxx
     }
     
-  static var members :   [String:AnyObject] = [:] // not jsondictionary
-
-    override func mainPort() -> Int16 {
+    static var members :   [String:AnyObject] = [:] // not jsondictionary
+    
+    func mainPort() -> Int16 {
         return self.port
     }
-    override func jsonStatus() -> JSONDictionary {
-     return ["router-for":"members","port":port,"count":MembersMainServer.members.count] as [String : Any]
+    func jsonStatus() -> JSONDictionary {
+        return ["router-for":"members","port":port,"count":MembersMainServer.members.count] as [String : Any]
     }
-//    }
+    //    }
     
     class func m_isMember(_ id:String) -> Bool {
         
         //from all over
-         if let _ =  members[id] {
+        if let _ =  members[id] {
             return true
         }
-        return false 
+        return false
     }
     //from all over
     class func m_getTokenFromID(id:String) -> String? {
         //from all over
-
-    // member must have access token for instagram api access
-        let mem =  members[id] as AnyObject
-       if  let token = mem["access_token"] as? String {
-        return token
-    }
+        
+        // member must have access token for instagram api access
+        if  let mem =  members[id],
+            let token = mem["access_token"] as? String {
+            return token
+        }
         return nil
     }
     class func m_getTokensFromID(id:String) -> (String?,String?) { // from reportmaker
@@ -94,7 +104,7 @@ class MembersMainServer : MainServer {
     }
     //mem[  "smaxx-token"]
     class func m_getMemberIDFromToken(_ token:String) -> String? {// from reportmaker
-
+        
         for (_,member) in members {
             if member["smaxx-token"] as! String  == token {
                 return member["id"] as? String
@@ -102,7 +112,7 @@ class MembersMainServer : MainServer {
         }
         return nil
     }
- 
+    
     //// remote calls
     
     class    func addMembership(_ request:RouterRequest , _ response:RouterResponse) {
@@ -124,9 +134,9 @@ class MembersMainServer : MainServer {
                 
                 
                 // adjust membership table and save it to disk
-                 members[id] = ["id":id   ,"created":("\(Date())"    ),
-                                                 "named":title    ]   as AnyObject?
- 
+                members[id] = ["id":id   ,"created":("\(Date())"    ),
+                               "named":title    ]   as AnyObject?
+                
                 /// save entire pile
                 
                 try  save ( )
@@ -143,7 +153,7 @@ class MembersMainServer : MainServer {
     class   func deleteMembershipForID (_ id:String, _ response:RouterResponse) {
         /// remove from memory and save entire pile
         do {
-             members[id] = nil
+            members[id] = nil
             
             
             try   save ()
@@ -160,16 +170,16 @@ class MembersMainServer : MainServer {
     
     class    func membershipForID(_  id:String, _ response:RouterResponse) {
         do {
-              response.headers["Content-Type"] = "application/json; charset=utf-8"
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
             if let x = members[id] {
                 let item = ["status":SMaxxResponseCode.success    ,   "data": x ] as JSONDictionary
                 try AppResponses.sendgooresponse(response,item )
             }  else
             {
-                let item = ["status":  SMaxxResponseCode.badMemberID] 
+                let item = ["status":  SMaxxResponseCode.badMemberID]
                 let r = response.status(HTTPStatusCode.badRequest)
                 let _ =   try r.send(JSON(item).description).end()
-               // Log.error("Request has bad member id")
+                // Log.error("Request has bad member id")
             }
         }
         catch {
@@ -181,7 +191,7 @@ class MembersMainServer : MainServer {
         /// remove from memory and save entire pile
         do {
             members = [:]
-  
+            
             try   save ( )
             
             let dict = ["status":SMaxxResponseCode.success    , "data":[:]   ] as JSONDictionary
@@ -195,8 +205,21 @@ class MembersMainServer : MainServer {
         }
     }
     class   func  membershipList(_ request:RouterRequest,_ response:RouterResponse) {
-        
-        let (limit,skip) = ReportMakerMainServer.reportOptions(request)
+         func reportOptions(_ request:RouterRequest) -> (Int,Int) {
+            var limit = 1000, skip = 0
+            if  let lim  = request.queryParameters["limit"] {
+                if let lim2  = Int( lim) {
+                    limit = lim2
+                }
+            }
+            if  let ska  = request.queryParameters["skip"] {
+                if let ska2  = Int( ska) {
+                    skip =  Int( ska2)
+                }
+            }
+            return (limit,skip)
+        }
+        let (limit,skip) =  reportOptions(request)
         
         /// filter membership as per skip and limit
         var mems :  JSONDictionary = [:]
@@ -241,7 +264,7 @@ class MembersMainServer : MainServer {
         do {
             let d  = try  restoreme("_membership")
             if let mem  = d["data"] as? [String : AnyObject] {
-                 members = mem
+                members = mem
                 //Log.info("membership restored to: \(membership)")
             }
             else { Log.info ("-----could not restore membership") }
@@ -251,28 +274,28 @@ class MembersMainServer : MainServer {
         }
     }
     /// save as keyed archive plist
-   class func save ( ) throws {         let start = Date()
+    class func save ( ) throws {         let start = Date()
         let spec = membersMainServer.store.membershipPath() +  "_MembersCachesmaxx" // singleton instance
         if  !NSKeyedArchiver.archiveRootObject(["status":SMaxxResponseCode.success ,"data": members],
                                                toFile:spec ){
             throw SMaxxError.cantWriteMembership(message: spec )
         } else {
             let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
-             Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
+            Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
         }
     }
-
+    
 }
 
 extension Router {
     
-     func setupRoutesForMembership( mainServer:MembersMainServer, smaxx:Smaxx) {
-            
-            // must support MainServer protocol
-            
-            let port = mainServer.mainPort()
+    func setupRoutesForMembership( mainServer:MembersMainServer, smaxx:Smaxx) {
         
-        print("*** setting up Membership  on port \(port) ***")
+        // must support MainServer protocol
+        
+    //    let port = mainServer.mainPort()
+        
+      //  print("*** setting up Membership  on port \(port) ***")
         
         /// Create or restore the Membership DB
         ///
@@ -281,7 +304,7 @@ extension Router {
         self.get("/status") {
             request, response, next in
             
-           
+            
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             do {
                 try response.status(HTTPStatusCode.OK).send(JSON(mainServer.jsonStatus()).description).end()
@@ -293,7 +316,7 @@ extension Router {
             //next()
         }
         
-       
+        
         ///
         // MARK:- Membership tracks who has the app and has consented to our terms
         ///
@@ -311,7 +334,7 @@ extension Router {
             
             Log.error("delete /membership/:id")
             guard let id = request.parameters["id"] else { return AppResponses.missingID(response)  }
-              MembersMainServer.deleteMembershipForID(id,response)
+            MembersMainServer.deleteMembershipForID(id,response)
             next()
         }
         ///
@@ -319,7 +342,7 @@ extension Router {
         ///
         self.get("/membership") {
             request, response, next in
-              MembersMainServer.membershipList(request, response)
+            MembersMainServer.membershipList(request, response)
             next()
         }
         
@@ -328,7 +351,7 @@ extension Router {
         ///
         self.post("/membership") {
             request, response, next in
-              MembersMainServer.addMembership(request,response)
+            MembersMainServer.addMembership(request,response)
             next()
         }
         
@@ -337,10 +360,10 @@ extension Router {
         ///
         self.delete("/membership") {
             request, response, next in
-              MembersMainServer.deleteMembership(request,response)
+            MembersMainServer.deleteMembership(request,response)
             next()
         }
-
+        
         self.get("/showlogin") { request, response, next in
             instagramCredentials.STEP_ONE(response) // will redirect to IG
             
@@ -374,12 +397,13 @@ extension Router {
         
     }
     
-
+    
 }
 extension MembersMainServer {
     
-    class func rewriteMemberInfo(_ ble:AnyObject) -> ( String , String, String, String, String )  {
-        var ret = ("","","","","")
+    class func rewriteMemberInfo(_ ble:AnyObject) -> AnyObject? {
+        
+        var ret:AnyObject? = nil
         if let userid = ble["id"] as? String {
             do {
                 
@@ -402,7 +426,7 @@ extension MembersMainServer {
                 /// save entire pile
                 try  MembersMainServer.save ( )
                 //Log.info("saved membership state")
-                ret = ( userid , "","","","")// token, smtoken, title, pic )
+                ret = ble // ( userid , "",ble["smaxx-token"],"","")// token, smtoken, title, pic )
             }
             catch  {
                 Log.error("Could not save membership")
@@ -427,4 +451,4 @@ extension MembersMainServer {
 //            next()
 //        }
 
-        
+

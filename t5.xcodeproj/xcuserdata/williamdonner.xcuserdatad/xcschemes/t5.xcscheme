@@ -71,7 +71,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "workers,reports,membership"
+            argument = "home,workers,reports,membership"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

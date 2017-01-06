@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -12,8 +12,7 @@
 //
 
 import Kitura
-import KituraNet
-//import KituraSys
+import KituraNet 
 import LoggerAPI
 import SwiftyJSON
 import Foundation
@@ -22,6 +21,11 @@ import Foundation
 ///
 // MARK:-  Reports Support
 ///
+
+/// Reports routes:
+///
+/// get("/reports")
+/// get("/reports/:id/:reportname") 
 
 
 typealias ReportBody = JSONDictionary
@@ -48,9 +52,6 @@ typealias ReportingFunc = (_ igp:SocialDataProcessor,_ skip:Int,_ limit:Int) -> 
 ///
 // MARK:- The PdCache is an implicit singleton
 ///
-typealias PdCache = [String:PersonData]
-fileprivate var ThePdCache:PdCache = [:]
-
 
 //http://stackoverflow.com/questions/29794281/how-to-get-memory-usage-in-swift
 func report_memory() -> UInt{
@@ -69,10 +70,13 @@ func report_memory() -> UInt{
     return 0
     //  }
 }
-var reportMakerMainServer :ReportMakerMainServer!
 
+class ReportMakerMainServer : SeparateServer {
+    
+    typealias PdCache = [String:PersonData]
+    fileprivate var ThePdCache:PdCache = [:]
+    
 
-class ReportMakerMainServer : MainServer {
     var port:Int16 = 0
     var smaxx:Smaxx 
     
@@ -82,11 +86,11 @@ class ReportMakerMainServer : MainServer {
     }
     
     
-    override func mainPort() -> Int16 {
+     func mainPort() -> Int16 {
         return self.port
     }
-    override func jsonStatus() -> JSONDictionary {
-        return  ["router-for":"workers","port":port,"cached":ThePdCache.count] as [String : Any]
+     func jsonStatus() -> JSONDictionary {
+        return  ["router-for":"reports","port":port,"cached":ThePdCache.count] as [String : Any]
     }
 
     /// get skip and limit options from the main URL
@@ -107,7 +111,7 @@ class ReportMakerMainServer : MainServer {
     class   func reportsAvailable(_ response:RouterResponse) {
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
-            let item = ["status":SMaxxResponseCode.success as AnyObject ,   "data": reportsDict() as AnyObject ] as JSONDictionary
+            let item = ["status":SMaxxResponseCode.success ,   "data": reportsDict()] as JSONDictionary
             try AppResponses.sendgooresponse(response,item )
         }
         catch {
@@ -120,7 +124,7 @@ class ReportMakerMainServer : MainServer {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             // ensure its a valid report anme
             guard let reportname = request.parameters["reportname"] else {
-                let item = ["status":SMaxxResponseCode.badMemberID as AnyObject] as JSONDictionary
+                let item = ["status":SMaxxResponseCode.badMemberID ] as JSONDictionary
                 try? AppResponses.sendbadresponse(response,item)
                 return
             }
@@ -143,9 +147,9 @@ class ReportMakerMainServer : MainServer {
                         // echo the request
                         if let (gkind,_) =  ReportMakerMainServer.reportfuncs[reportname]{
                             if gkind == .adHoc {
-                                rqst = ["time":"\(Date())" as AnyObject,"url":request.urlURL as AnyObject] //"report":reportname,"id":id,
+                                rqst = ["time":"\(Date())" ,"url":request.urlURL ] //"report":reportname,"id":id,
                             } else {
-                                rqst = ["limit":limit as AnyObject,"skip":skip as AnyObject,"time":"\(Date())" as AnyObject,"url":request.urlURL as AnyObject]
+                                rqst = ["limit":limit ,"skip":skip ,"time":"\(Date())" ,"url":request.urlURL ]
                             }
                         }
                         
@@ -221,19 +225,19 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
     if bypasscache == true {
         if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
             //Log.error(" Report:\(reportname) found user \(id) on disk with forced bypass ")
-            ThePdCache[path] = pdxxx // add this to the cache
+            reportMakerMainServer.ThePdCache[path] = pdxxx // add this to the cache
             pdx = pdxxx
         }
     } else {
         // try for cache lookup
-        let fpdx = ThePdCache[path]
+        let fpdx = reportMakerMainServer.ThePdCache[path]
         if fpdx != nil {
             pdx = fpdx!
             //Log.error(" Report:\(reportname) found user \(id) in cache ")
         } else {
             if let pdxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
                 //Log.error(" Report:\(reportname) found user \(id) on disk ")
-                ThePdCache[path] = pdxx // add this to the cache
+                reportMakerMainServer.ThePdCache[path] = pdxx // add this to the cache
                 pdx = pdxx ////
             }
         }
@@ -286,9 +290,9 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
     }
     Log.error("Report:\(reportname) awaiting user \(id) full setup")
     let thereport2:JSONDictionary = [
-        "report-status":SMaxxResponseCode.waiting as AnyObject, // shud trigger a re-ask soon
+        "report-status":SMaxxResponseCode.waiting , // shud trigger a re-ask soon
         "userid":id as AnyObject,
-        "description":"user initialization not finished yet" as AnyObject]
+        "description":"user initialization not finished yet" ]
     return thereport2 // no data will generat a 541 back
     
 }// func report
@@ -298,9 +302,9 @@ extension Router {
             
             // must support MainServer protocol
             
-            let port = mainServer.mainPort()
+       //     let port = mainServer.mainPort()
         
-        print("*** setting up Reports  on port \(port) ***")
+       // print("*** setting up Reports  on port \(port) ***")
         
         
         self.get("/status") {

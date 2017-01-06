@@ -1,5 +1,5 @@
 
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -15,11 +15,7 @@ import LoggerAPI
 import KituraNet
 import Foundation
 
-/// Upper level interface to Instagram API Operations
-
-let DataTaskGet = false  // set only on MAC OSX to use urlsessions
-let DataTaskPut = false  // set only on MAC OSX to use urlsessions
-
+/// Upper level interface to Instagram and other Remote API Operations
 
 struct NetClientOps {
     
@@ -82,8 +78,6 @@ struct NetClientOps {
             
             fetch(path, method: "POST", body: paramString.data(using: String.Encoding.utf8),
                   schema:schema,host:host,port:port,completion:completion)
-            
-            
         }
     }
     
@@ -100,7 +94,6 @@ struct NetClientOps {
         requestOptions.append(.headers(headers))
         
         var responseBody = Data()
-        print("kitura net fetch \(requestOptions)")
         let req = HTTP.request(requestOptions) { response in
             if let response = response {
                 guard response.statusCode == .OK else { return }
@@ -108,13 +101,76 @@ struct NetClientOps {
                 completion(200,responseBody)
             }
         }
-        
-        //        if let body = body {
-        //            req.end(JSON(body))// this sends Data
-        //        }
-        //        else {
         req.end()
-        // }
     }
     
+    static  func encodedRequest(_ fullurl:URL, params:URLParamsToEncode?) -> NSMutableURLRequest {
+        let parms = (params != nil) ? params! : [:]
+        let encreq = NSMutableURLRequest(url:fullurl)
+         nwEncode(encreq, parameters: parms)
+        return encreq
+    }
+    // nwEncode alters the urlrequest passed in as first componenet
+    private static func nwEncode(_ req:NSMutableURLRequest,parameters:  JSONDictionary){
+        // extracted from Alamofire
+        func escape(_ string: String) -> String {
+            let generalDelimitersToEncode = ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
+            let subDelimitersToEncode = "!$&'()*+,;="
+            var allowedCharacterSet = CharacterSet.urlQueryAllowed //as! NSMutableCharacterSet
+            allowedCharacterSet.remove(charactersIn:  generalDelimitersToEncode + subDelimitersToEncode)
+            return string.addingPercentEncoding(withAllowedCharacters: allowedCharacterSet) ?? ""
+        }
+        func queryComponents(_ key: String, _ value: AnyObject) -> [(String, String)] {
+            var components: [(String, String)] = []
+            if let dictionary = value as? [String: AnyObject] {
+                for (nestedKey, value) in dictionary {
+                    components += queryComponents("\(key)[\(nestedKey)]",  value)
+                }
+            } else if let array = value as? [AnyObject] {
+                for value in array {
+                    components += queryComponents("\(key)[]", value)
+                }
+            } else {
+                let kv = (escape(key), escape("\(value)"))
+                components.append(kv)
+            }
+            
+            return components
+        }
+        func query(_ parameters: [String: AnyObject]) -> String {
+            var parc = Array(parameters.keys)
+            parc.sort()
+            var components: [(String, String)] = []
+            for key in parc {
+                let value = parameters[key]!
+                components += queryComponents(key, value)
+            }
+            return (components.map { "\($0)=\($1)" } as [String]).joined(separator:"&")
+        }
+        
+        if  let uRLComponents = URLComponents(url: req.url!, resolvingAgainstBaseURL: false){
+            let percentEncodedQuery = (uRLComponents.percentEncodedQuery.map { $0 + "&" } ?? "") + query(parameters as [String : AnyObject])
+            // print("percentEncodedQuery = \(percentEncodedQuery)")
+            var nurlcomponents = uRLComponents
+            nurlcomponents.percentEncodedQuery = percentEncodedQuery
+            req.url = nurlcomponents.url
+        }
+        return
+    }
+
+    static  func nwGetJSON(_ nsurl:URL ,completion:@escaping NetCompletionFunc )
+        throws  { //-> NSMutableURLRequest  {
+            
+            let req = NSMutableURLRequest(url: nsurl)
+             nwEncode(req, parameters: [:])
+             perform_get_request(schema: nsurl.scheme!, host:nsurl.host!, port:Int16(nsurl.port!), path:nsurl.path ) {statuscode , data in
+                guard  let tdata = data else {
+                    print("Api Failure  \(statuscode) in nwGetJSON \(nsurl)")
+                    completion(statuscode,[:]   as AnyObject)
+                    return
+                }
+                completion(statuscode,tdata as AnyObject?)
+            }
+    }
 }
+    

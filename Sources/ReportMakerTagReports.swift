@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -50,7 +50,7 @@ extension ReportMakerMainServer {
                 
                 let bf = igp.pd.ouMediaPosts [beforelast] // pick it out
                 let thepic = bf.standardPic
-                therows.append( ["row":rowNum as AnyObject,"pic":thepic as AnyObject,"val":stuff.val as AnyObject,"count":stuff.count as AnyObject,"before-first":stuff.postsBeforeFirst as AnyObject,"before-last":stuff.postsBeforeLast as AnyObject ] )
+                therows.append( ["row":rowNum  ,"pic":thepic  ,"val":stuff.val  ,"count":stuff.count  ,"before-first":stuff.postsBeforeFirst  ,"before-last":stuff.postsBeforeLast  ] )
                 //Log.error("emitting igperson:\(igperson)")
             }
         }
@@ -69,7 +69,7 @@ extension ReportMakerMainServer {
         }
         
         //Log.error("report from people= \(bop.count) rows= \(therows.count) skip \(skip) limit \(limit)")
-        let body:JSONDictionary = [   "rows":therows as AnyObject]
+        let body:JSONDictionary = [   "rows":therows ]
         return (therows.count,body,.aboutPeople)
     }
     

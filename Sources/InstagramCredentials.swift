@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -22,7 +22,6 @@ import Foundation
 ///  however, this is not a plugin and it uses NSURLSession to communicate with Instagram, not the Kitura HTTP library
 
 
-var instagramCredentials : InstagramCredentials!
 
 open class InstagramCredentials {
     fileprivate var clientId : String
@@ -74,7 +73,7 @@ open class InstagramCredentials {
                 userid = b[0]
             }
         }
-        Log.verbose("---->>>>  post callback for user  \(userid)")
+        Log.info("---->>>>  post callback for user  \(userid)")
         // member must have access token for instagram api access
        MembersCache.getTokenFromID(id: userid) { token in
             workersMainServer.make_worker_for(id: userid, token: token!)
@@ -137,8 +136,15 @@ open class InstagramCredentials {
             NetClientOps.perform_post_request(schema:"https", host:"api.instagram.com", port: 443,path:"/oauth/access_token",
             paramString: "?client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
-                if let body = body ,  status == 200  {
-                    let( userid , token, smtoken, title, pic ) =  self.processInstagramResponse (body: body)
+                if status == 200 ,
+                    let body = body ,
+                    let xyz =  self.processInstagramResponse (body: body) {
+                    let userid = xyz["id"] as! String
+                    let smtoken = xyz["smaxx-token"] as! String
+                    let token = xyz["access_token"] as! String
+                    let title = xyz["named"] as! String
+                    let pic  = xyz["pic"] as! String
+                    
                     workersMainServer?.make_worker_for(id:userid,token:token)
                     // w.start(userid,request,response)
                     // see if we can go somewhere interesting
@@ -178,8 +184,9 @@ open class InstagramCredentials {
     open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
     }
-   private  func processInstagramResponse(body:Data)->( String , String, String, String, String )  {
-        var ret = ("","","","","")
+   private  func processInstagramResponse(body:Data)-> AnyObject?  {
+    var ret:AnyObject? = nil
+        //var ret = ("","","","","")
         let jsonBody = JSON(data: body)
         if let token = jsonBody["access_token"].string,
             let userid = jsonBody["user"]["id"].string,

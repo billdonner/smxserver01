@@ -1,5 +1,5 @@
 
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -16,6 +16,40 @@ import Kitura
 import KituraNet
 import SwiftyJSON
 import Foundation
+
+
+public typealias JSONDictionary = [String: Any]
+
+//open class  SeparateServer : NSObject {
+//    func mainPort() -> Int16 {
+//        fatalError()
+//    }
+//    func jsonStatus() -> JSONDictionary {
+//        fatalError()
+//    }
+//}
+// unclear why
+
+public protocol SeparateServer {
+    func mainPort() -> Int16
+    func jsonStatus() -> JSONDictionary
+}
+
+//Smaxx gets loaded at startup and stays that way
+struct Smaxx {
+    
+    let started = "\(Date())"
+    var packagename = "t5"
+    var servertag = "-unassigned-"
+    var portno:Int16  = 8090
+    var version = "v0.465"
+    var modes = ["reports","membership","workers","homepage"]
+    var title = "SocialMaxx@UnspecifiedSite"
+    var ip = "127.0.0.1"
+    var verificationToken = ""
+    
+
+}
 
 
 struct IGOps {
@@ -42,7 +76,7 @@ struct IGOps {
             }
         }
     }
-
+    
     
     private static func get_token_for_member(_ targetID:String) throws -> String  {
         
@@ -197,7 +231,7 @@ struct IGOps {
     fileprivate static func plainCall(_ url:URL,
                                       completion:@escaping (Int,OptDict)->())
         throws {
-            try RemoteNetOps.nwGetJSON(url) { status, jsonObject in
+            try NetClientOps.nwGetJSON(url) { status, jsonObject in
                 apiCount += 1
                 defer {
                 }
@@ -216,7 +250,7 @@ struct IGOps {
                                             each:@escaping (IGMediaBlock)->(),
                                             completion:@escaping (Int)->()) throws {
         
-        try  RemoteNetOps.nwGetJSON(url) { status, jsonObject in
+        try  NetClientOps.nwGetJSON(url) { status, jsonObject in
             apiCount += 1
             defer {
             }
@@ -409,41 +443,41 @@ extension IGOps { // networking
                     
                 case .relationship (let userID, let accessToken):
                     let pathString = "/v1/users/" + userID + "/relationship"
-                    return (pathString, ["access_token": accessToken as AnyObject   ])
+                    return (pathString, ["access_token": accessToken     ])
                     
                 case .userInfo (let userID, let accessToken):
                     let pathString = "/v1/users/" + userID
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken   ])
                     
                 case .mediaLikes (let mediaID, let accessToken):
                     
                     let pathString = "/v1/media/" + mediaID + "/likes"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken   ])
                     
                 case .mediaComments (let mediaID, let accessToken):
                     
                     let pathString = "/v1/media/" + mediaID + "/comments"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken   ])
                     
                 case .mediaRecent ( _ , let accessToken ):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken   ])
                     
                 case .mediaRecentAboveMin ( _ , let accessToken, let minID  ):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
-                    return (pathString, ["access_token": accessToken as AnyObject,"min_id":minID as AnyObject  ])
+                    return (pathString, ["access_token": accessToken  ,"min_id":minID    ])
                     
                 case .mediaRecentBelowMax ( _ , let accessToken, let maxID ):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
-                    return (pathString, ["access_token": accessToken as AnyObject, "max_id":maxID as AnyObject  ])
+                    return (pathString, ["access_token": accessToken  , "max_id":maxID    ])
                     
                 case .mediaRecentInRange ( _ , let accessToken, let minID, let maxID ):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/media/recent"
-                    return (pathString, ["access_token": accessToken as AnyObject,"min_id":minID as AnyObject,"max_id":maxID as AnyObject  ])
+                    return (pathString, ["access_token": accessToken  ,"min_id":minID  ,"max_id":maxID    ])
                     
                     //                case .SelfMediaLiked (  _, let accessToken):
                     //                    let pathString = "/v1/users/self/media/liked"
@@ -452,12 +486,12 @@ extension IGOps { // networking
                 case .following ( _  , let accessToken):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/follows"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken  ])
                     
                 case .followedBy ( _ , let accessToken ):
                     let userID = "self"
                     let pathString = "/v1/users/" + userID + "/followed-by"
-                    return (pathString, ["access_token": accessToken as AnyObject ])
+                    return (pathString, ["access_token": accessToken  ])
                     
                     //                case .SelfFollowing ( _, let accessToken):
                     //                    let pathString = "/v1/users/" + "self" + "/follows"
@@ -472,9 +506,9 @@ extension IGOps { // networking
                 }
             }()
             
-            let baseurl = URL(string:  baseURLString)!
+            let baseurl = URL(string:  instagramBaseURLString)!
             let fullurl = baseurl.appendingPathComponent(result.path)
-            let encodedrequest = RemoteNetOps.encodedRequest(fullurl, params: result.parameters)
+            let encodedrequest = NetClientOps.encodedRequest(fullurl, params: result.parameters)
             return encodedrequest
         }
     }
@@ -494,7 +528,7 @@ struct AppResponses {
         do {
             let rqst = (mess != nil) ?   " \(status) -- \(mess!)" : "\(status)"
             Log.error("badrequest \(rqst)")
-            let item:JSONDictionary = mess != nil ? ["status":status as AnyObject,"description":mess! as AnyObject] as JSONDictionary :  ["status":status as AnyObject] as JSONDictionary
+            let item:JSONDictionary = mess != nil ? ["status":status  ,"description":mess!  ] as JSONDictionary :  ["status":status  ] as JSONDictionary
             try sendbadresponse(response, item)
             
         }
@@ -504,7 +538,7 @@ struct AppResponses {
     }
     static func acceptgoodrequest(_ response:RouterResponse, _ code: SMaxxResponseCode ) { // item:JSONDictionary) {
         do {
-            let  item =   ["status":code as AnyObject]
+            let  item =   ["status":code  ]
             try sendgooresponse(response,item )
             
             //Log.error("Did send acceptgoodrequest")

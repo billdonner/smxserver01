@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		AD2ACFF11E19650100DCA12E /* NetClientOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD2ACFF01E19650100DCA12E /* NetClientOps.swift */; };
 		AD2ACFF31E19744700DCA12E /* MembersCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD2ACFF21E19744700DCA12E /* MembersCache.swift */; };
+		ADD3F4AA1E1FEF1C00586A0B /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = ADD3F4A91E1FEF1C00586A0B /* README.md */; };
 		OBJ_159 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* Logger.swift */; };
 		OBJ_166 /* Socket.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* Socket.swift */; };
 		OBJ_167 /* SocketProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_12 /* SocketProtocols.swift */; };
@@ -126,7 +127,6 @@
 		OBJ_346 /* MembershipMainServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_129 /* MembershipMainServer.swift */; };
 		OBJ_348 /* PersonDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_131 /* PersonDataModel.swift */; };
 		OBJ_349 /* PropertiesDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_132 /* PropertiesDataModel.swift */; };
-		OBJ_350 /* RemoteNetOps.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_133 /* RemoteNetOps.swift */; };
 		OBJ_351 /* ReportMakerMainServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_134 /* ReportMakerMainServer.swift */; };
 		OBJ_352 /* ReportMakerFollowerReports.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_135 /* ReportMakerFollowerReports.swift */; };
 		OBJ_353 /* ReportMakerPeopleReports.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_136 /* ReportMakerPeopleReports.swift */; };
@@ -327,6 +327,7 @@
 /* Begin PBXFileReference section */
 		AD2ACFF01E19650100DCA12E /* NetClientOps.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetClientOps.swift; sourceTree = "<group>"; };
 		AD2ACFF21E19744700DCA12E /* MembersCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MembersCache.swift; sourceTree = "<group>"; };
+		ADD3F4A91E1FEF1C00586A0B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		OBJ_100 /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
 		OBJ_101 /* RawBodyParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RawBodyParser.swift; sourceTree = "<group>"; };
 		OBJ_102 /* TextBodyParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextBodyParser.swift; sourceTree = "<group>"; };
@@ -356,7 +357,6 @@
 		OBJ_13 /* SocketUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketUtils.swift; sourceTree = "<group>"; };
 		OBJ_131 /* PersonDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonDataModel.swift; sourceTree = "<group>"; };
 		OBJ_132 /* PropertiesDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesDataModel.swift; sourceTree = "<group>"; };
-		OBJ_133 /* RemoteNetOps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNetOps.swift; sourceTree = "<group>"; };
 		OBJ_134 /* ReportMakerMainServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerMainServer.swift; sourceTree = "<group>"; };
 		OBJ_135 /* ReportMakerFollowerReports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerFollowerReports.swift; sourceTree = "<group>"; };
 		OBJ_136 /* ReportMakerPeopleReports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerPeopleReports.swift; sourceTree = "<group>"; };
@@ -597,6 +597,7 @@
 		OBJ_116 /* t5 */ = {
 			isa = PBXGroup;
 			children = (
+				OBJ_127 /* main.swift */,
 				OBJ_139 /* HomePageHTML.swift */,
 				OBJ_118 /* IGDataEngine.swift */,
 				OBJ_119 /* IGDateSupport.swift */,
@@ -606,12 +607,10 @@
 				OBJ_123 /* IGPipelineMainOps.swift */,
 				OBJ_125 /* Instagram.swift */,
 				OBJ_126 /* InstagramCredentials.swift */,
-				OBJ_127 /* main.swift */,
 				OBJ_128 /* Matrix.swift */,
 				AD2ACFF21E19744700DCA12E /* MembersCache.swift */,
 				OBJ_129 /* MembershipMainServer.swift */,
 				AD2ACFF01E19650100DCA12E /* NetClientOps.swift */,
-				OBJ_133 /* RemoteNetOps.swift */,
 				OBJ_131 /* PersonDataModel.swift */,
 				OBJ_132 /* PropertiesDataModel.swift */,
 				OBJ_134 /* ReportMakerMainServer.swift */,
@@ -732,15 +731,15 @@
 			path = HTTP;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
+				ADD3F4A91E1FEF1C00586A0B /* README.md */,
 				OBJ_6 /* Package.swift */,
 				OBJ_7 /* Sources */,
 				OBJ_142 /* Tests */,
 				OBJ_143 /* Products */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_52 /* HTTPParser */ = {
@@ -1067,7 +1066,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_143 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1103,6 +1102,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				ADD3F4AA1E1FEF1C00586A0B /* README.md in Sources */,
 				OBJ_159 /* Logger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1268,7 +1268,6 @@
 				OBJ_346 /* MembershipMainServer.swift in Sources */,
 				OBJ_348 /* PersonDataModel.swift in Sources */,
 				OBJ_349 /* PropertiesDataModel.swift in Sources */,
-				OBJ_350 /* RemoteNetOps.swift in Sources */,
 				OBJ_351 /* ReportMakerMainServer.swift in Sources */,
 				OBJ_352 /* ReportMakerFollowerReports.swift in Sources */,
 				OBJ_353 /* ReportMakerPeopleReports.swift in Sources */,

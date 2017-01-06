@@ -1,22 +1,13 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
 
 /** hacked by wld
- * Copyright IBM Corporation 2016
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ 
+ Having a lot of difficulty defining global structures in main.swift and having compiler recognize them
+ So,DONT add any more in here,
+ 
  **/
 import Kitura
 import KituraNet
@@ -25,26 +16,41 @@ import SwiftyJSON
 import LoggerAPI
 import Foundation
 
+//MARK:- PUT STRUCTURE AND CLASS DEFINITIONS ELSEWHERE
 
-let baseURLString = "https://api.instagram.com"
+/// Having a lot of difficulty defining global structures in main.swift and having compiler recognize them
+/// So,DONT add any more in here,
 
-public typealias JSONDictionary = [String: Any]
+//MARK:- ALL GLOBAL VARIABLES GO HERE
+/// globals re: separate Kitura HTTP servers on separate ports
+var membersMainServer : MembersMainServer!
 
-// unclear why
-//public protocol MainServer {
-//    func mainPort() -> Int16
-//    func jsonStatus() -> JSONDictionary
-//}
+var workersMainServer : WorkersMainServer!
 
-open class  MainServer : NSObject {
-    func mainPort() -> Int16 {
-        fatalError()
-    }
-    func jsonStatus() -> JSONDictionary {
-        fatalError()
-    }
-}
-func ciFor(_ tag:String) -> InstagramCredentials {
+var reportMakerMainServer : ReportMakerMainServer!
+
+var homePageMainServer : HomePageMainServer!
+
+var allServers:[SeparateServer] = []
+
+
+
+/// globals re: remote communications with instagram
+let DataTaskGet = false  // set only on MAC OSX to use urlsessions
+let DataTaskPut = false  // set only on MAC OSX to use urlsessions
+
+var instagramCredentials : InstagramCredentials!
+
+let instagramBaseURLString = "https://api.instagram.com"
+
+
+/// there are NO other globals in any other modules - put them above this line
+
+
+
+//TODO: immediately -  implement internal rest calls between differnt servers
+
+fileprivate func ciFor(_ tag:String) -> InstagramCredentials {
     
     switch tag {
         
@@ -69,38 +75,93 @@ func ciFor(_ tag:String) -> InstagramCredentials {
 }
 
 
-//open class Sm {
-struct Smaxx {
+///
+/// Setup routes - according to global modes setup from command line
+///
+
+fileprivate func setupRoutersAndServers(_ smaxx:Smaxx) {
     
-    let started = "\(Date())"
-    var packagename = "t5"
-    var servertag = "-unassigned-"
-    var portno:Int16  = 8090
-    var version = "v0.465"
-    var modes = ["reports","membership","workers"]
-    var title = "SocialMaxx@UnspecifiedSite"
-    var ip = "127.0.0.1"
-    var verificationToken = ""
+    let start = Date() // figure out how long kitura takes to get servers listening
     
-    func status () -> JSONDictionary  {
-        let a : JSONDictionary  = [ "router-for":"webpages+auth"  ,
-                                    "software-verision":version   ,
-                                    "instagram-api-url":baseURLString   ,
-                                    "smaxx-server-ip":ip   ,
-                                    "packagename":packagename   ,
-                                    "servertag":servertag   ,
-                                    "portno":portno   ,
-                                    // "modes":modes,
-            "title":title   ,
-            "apicalls":IGOps.apiCount   ,
-            "started":started   ,
-            
-            ]
-        return a
+    let flavors = smaxx.modes
+    var httpServerPort = smaxx.portno  // leave one for main server
+    if flavors.contains("membership") {
+        //
+        
+        let members = MembersMainServer(port:httpServerPort,tag:smaxx.servertag,  smaxx:smaxx )
+        
+        membersMainServer = members
+        
+        let mrouter = Router()
+        mrouter.setupRoutesForMembership(mainServer:members , smaxx:smaxx)
+        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: mrouter)
+        srv.started {
+            let end = Date()
+            let ms = String(format:"@%.2fms",end.timeIntervalSince(start)*1000.0)
+               Log.info("membership \(membersMainServer!) started on port \(members.mainPort())  elapsed \(ms)")
+            allServers.append(membersMainServer)
+        }
+        httpServerPort += 1
     }
+    if flavors.contains("home") {
+        
+        //TODO: must be started after membership now
+        let rserver = HomePageMainServer(port:httpServerPort,servertag:smaxx.servertag,smaxx:smaxx)
+        
+        homePageMainServer = rserver
+        
+        let mainplainrouter = Router()
+        mainplainrouter.setupRoutesPlain(mainServer:rserver , smaxx:smaxx)
+        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: mainplainrouter)
+        srv.started {
+            /// put an informative banner right into the log
+            
+            let end = Date()
+            let ms = String(format:"@%.2fms",end.timeIntervalSince(start)*1000.0)
+               Log.info("homepage \(homePageMainServer!) started on port \(rserver.mainPort())  elapsed \(ms)")
+            allServers.append(homePageMainServer)
+            
+        }
+        httpServerPort += 1
+    }
+    if flavors.contains("reports") {
+        let rserver = ReportMakerMainServer(port:httpServerPort,smaxx:smaxx)
+        
+        reportMakerMainServer = rserver
+        
+        let rrouter = Router()
+        rrouter.setupRoutesForReports(mainServer:rserver , smaxx:smaxx)
+        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: rrouter)
+        srv.started {
+            
+            let end = Date()
+            let ms = String(format:"@%.2fms",end.timeIntervalSince(start)*1000.0)
+         
+               Log.info("reports \(reportMakerMainServer!) started on port \(rserver.mainPort())  elapsed \(ms)")
+            allServers.append(reportMakerMainServer)
+        }
+        httpServerPort += 1
+    }
+
+    if flavors.contains("workers") {
+        //let workers = smaxx.workers
+        let  workers = WorkersMainServer(port:httpServerPort, smaxx:smaxx)
+        
+        workersMainServer = workers
+        
+        let wrouter = Router()
+        wrouter.setupRoutesForWorkers(mainServer:workers, smaxx:smaxx)
+        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: wrouter)
+        srv.started {  
+            let end = Date()
+            let ms = String(format:"@%.2fms",end.timeIntervalSince(start)*1000.0)
+               Log.info("workers \(workersMainServer!) started on port \(workersMainServer.mainPort())  elapsed \(ms)")
+            allServers.append(workersMainServer)
+        }
+        httpServerPort += 1
+    }
+    
 }
-
-
 
 
 //    //let apiurl = "https://api.ipify.org?format=json"
@@ -117,61 +178,7 @@ struct Smaxx {
 
 
 
-///
-/// Setup routes - according to global modes setup from command line
-///
-
-func setupRoutersAndServers(_ smaxx:Smaxx) {
-    let flavors = smaxx.modes
-    var httpServerPort = smaxx.portno+1 // leave one for main server
-    
-    if flavors.contains("reports") {
-        let rserver = ReportMakerMainServer(port:httpServerPort,smaxx:smaxx)
-        let rrouter = Router()
-        rrouter.setupRoutesForReports(mainServer:rserver , smaxx:smaxx)
-        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: rrouter)
-        srv.started { [unowned rrouter] in
-            reportMakerMainServer = rserver
-            print("reports \(rrouter) starting on port \(rserver.mainPort())")
-        }
-        httpServerPort += 1
-    }
-    if flavors.contains("membership") {
-        //
-        
-        let members = MembersMainServer(port:httpServerPort,tag:smaxx.servertag,  smaxx:smaxx )
-        let mrouter = Router()
-        mrouter.setupRoutesForMembership(mainServer:members , smaxx:smaxx)
-        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: mrouter)
-        srv.started { [unowned members] in
-            membersMainServer = members
-            print("membership \(members) starting on port \(members.mainPort())")
-        }
-        httpServerPort += 1
-    }
-    if flavors.contains("workers") {
-        //let workers = smaxx.workers
-        let  workers = WorkersMainServer(port:httpServerPort, smaxx:smaxx)
-        let wrouter = Router()
-        wrouter.setupRoutesForWorkers(mainServer:workers, smaxx:smaxx)
-        let srv = Kitura.addHTTPServer(onPort: Int(httpServerPort), with: wrouter)
-        srv.started { [unowned wrouter] in
-            workersMainServer = workers
-            print("workers \(wrouter) starting on port \(workersMainServer.mainPort())")
-        }
-        httpServerPort += 1
-    }
-    /// this gets started unconditionally
-    let rserver = HomePageMainServer(port:httpServerPort,servertag:smaxx.servertag,smaxx:smaxx)
-    let mainplainrouter = Router()
-    mainplainrouter.setupRoutesPlain(mainServer:rserver , smaxx:smaxx)
-    let srv = Kitura.addHTTPServer(onPort: Int(smaxx.portno), with: mainplainrouter)
-    srv.started { [unowned mainplainrouter] in
-        /// put an informative banner right into the log
-        print("main \(mainplainrouter) starting on port \(rserver.mainPort())")
-        
-    }
-}
+//MARK:- MAIN SERVER STARTS HERE
 
 /// this gets Kitura to start processing requests, and the started callbacks above get called
 ///
@@ -179,12 +186,14 @@ func setupRoutersAndServers(_ smaxx:Smaxx) {
 ///
 
 
-Log.logger = HeliumLogger()
-
-/// get our IP address, dont bother if we cant
+let hl =  HeliumLogger(.info)
+hl.colored = false
+Log.logger = hl
+/// get our IP address, dont bother booting if we cant
+let start = Date()
 IGOps.discoverIpAddress() { ip in
     
-    
+    let ms = String(format:"@%.2fms",Date().timeIntervalSince(start)*1000.0)
     var smaxx = Smaxx()
     
     /// make token from ip address
@@ -195,19 +204,13 @@ IGOps.discoverIpAddress() { ip in
     let verificationToken = "\(smaxx.servertag)\(smaxx.portno)\(x)"
     
     smaxx.verificationToken = verificationToken
-    /// once we have an ip address we can
-    /// setup subscription subscription from instagram
-    
-    
-    instagramCredentials.make_subscription(verificationToken)
-    
     
     
     // log what's going on
     
-    Log.info("*****************  \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version)  **********************")
-    Log.info("** \(NSDate()) on \(smaxx.packagename) \(smaxx.ip):\( smaxx.portno) serving \( smaxx.modes.joined(separator: ","))")
-    Log.info("*****************  \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version) **********************")
+    Log.info("***************** \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version) \(ms) **********************")
+    Log.info("***************** \(NSDate()) on \(smaxx.packagename) \(smaxx.ip):\( smaxx.portno) serving \( smaxx.modes.joined(separator: ","))")
+    Log.info("***************** \(smaxx.title)(\(smaxx.servertag)) \(smaxx.version) **********************")
     
     let arguments = ProcessInfo.processInfo.arguments
     guard arguments.count >= 5  else {
@@ -235,6 +238,14 @@ IGOps.discoverIpAddress() { ip in
     
     /// finally, after absorbing the environment, set up kitura
     setupRoutersAndServers(smaxx )
+    
+    /// once we have an ip address we can
+    /// setup subscription subscription from instagram
+    
+    
+  //  instagramCredentials.make_subscription(verificationToken)
+    
+    
     
     ///
     /// The Kitura router

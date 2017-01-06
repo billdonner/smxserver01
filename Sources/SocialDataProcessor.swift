@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -56,7 +56,7 @@ enum SMaxxError: Error {
 typealias Intfunc = ((Int)->())
 typealias OptIntFunc = Intfunc?
 typealias OptDict = BasicDict?
-typealias URLParamsToEncode = OptDict
+typealias URLParamsToEncode = JSONDictionary //OptDict
 typealias FilterFunc = (_ key:String,_ val:AnyObject)->Bool
 typealias OptFilterFunc = FilterFunc?
 typealias NetCompletionFunc = (_ status: Int, _ object: AnyObject?) -> ()

@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -13,19 +13,24 @@
 
 
 import Kitura
-import KituraNet
-//import KituraSys
+import KituraNet 
 import LoggerAPI
 import SwiftyJSON
 import Foundation
 
+///
+// MARK:-  Workers Support
+///
 
 
-/// This "MainServer" is started on its own port via the addHTTPServer Kitura api
+/// Workers routes:
+///
+///  get("/workers/start/:id")
+///  get("/workers/stop/:id")
 
-var workersMainServer : WorkersMainServer!
+/// This "SeparateServer" is started on its own port via the addHTTPServer Kitura api
 
-class  WorkersMainServer:MainServer {
+class  WorkersMainServer:SeparateServer {
 
 fileprivate var activeWorkers: [String:String] = [:]
 
@@ -37,11 +42,13 @@ fileprivate var activeWorkers: [String:String] = [:]
     }
     
     
-    override func mainPort() -> Int16 {
+     func mainPort() -> Int16 {
         return self.port
     }
-    override func jsonStatus() -> JSONDictionary {
+     func jsonStatus() -> JSONDictionary {
         return ["router-for":"workers","port":port,"active-workers":activeWorkers.count] as [String : Any]
+        
+        
     }
     
     let pipelineKey = "WorkersrIgPipeline"
@@ -126,13 +133,13 @@ fileprivate var activeWorkers: [String:String] = [:]
             }
         self.make_worker_for(id: id, token: token)
             //rejectduetobadrequest(response,status:200,mess:"Worker id \(id) was started")
-            let item : JSONDictionary = ["status":SMaxxResponseCode.success  as AnyObject,"workid":id as AnyObject,"workerid":"001" as AnyObject, "newstate": "started" as AnyObject ]
+            let item : JSONDictionary = ["status":SMaxxResponseCode.success ,"workid":id as AnyObject,"workerid":"001" , "newstate": "started" ]
            try? AppResponses.sendgooresponse(response,item )
         }
       
         }
     }
-    func stopcold(id:String) {
+    private func stopcold(id:String) {
         
         activeWorkers.removeValue(forKey: id)
     }
@@ -166,12 +173,12 @@ fileprivate var activeWorkers: [String:String] = [:]
 
 extension Router{
     
-    func setupRoutesForWorkers( mainServer:MainServer,smaxx:Smaxx) {
+    func setupRoutesForWorkers( mainServer:WorkersMainServer,smaxx:Smaxx) {
         
         // must support MainServer protocol
         
-        let port = mainServer.mainPort()
-        print("*** setting up Workers on port \(port) ***")
+        //let port = mainServer.mainPort()
+       // print("*** setting up Workers on port \(port) ***")
         self.get("/status") {
             request, response, next in
             

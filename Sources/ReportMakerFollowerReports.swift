@@ -1,4 +1,4 @@
-///  provenance - SocialMaxx Server
+/// provenance - SocialMaxx Server
 /// builds on XCode 8.2 standard release on OSX 10.12
 /// as of 2 Jan 2017
 ///
@@ -25,7 +25,7 @@ extension ReportMakerMainServer {
             // for each row indicate if this user is a member thru the smaxx-id field
             let smxid =  MembersCache.isMemberFromCache(igperson.id) ? igperson.id : ""
             
-            therows.append( ["row":rowNum as AnyObject,"userid":igperson.username as AnyObject,"smaxx-id":smxid as AnyObject, "pic":igperson.pic as AnyObject,"c1":c1 as AnyObject,"av1":av1 as AnyObject,"c2":c2 as AnyObject,"av2":av2 as AnyObject ] )
+            therows.append( ["row":rowNum  ,"userid":igperson.username  ,"smaxx-id":smxid  , "pic":igperson.pic  ,"c1":c1  ,"av1":av1  ,"c2":c2  ,"av2":av2   ] )
             //Log.error("emitting igperson:\(igperson)")
         }
         var lim = 0
