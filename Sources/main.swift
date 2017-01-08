@@ -18,7 +18,7 @@ import Foundation
 
 //MARK:- PUT STRUCTURE AND CLASS DEFINITIONS ELSEWHERE
 
-/// Having a lot of difficulty defining global structures in main.swift and having compiler recognize them
+/// Having a lot of difficulty defining types  in main.swift and having compiler recognize them
 /// So,DONT add any more in here,
 
 //MARK:- ALL GLOBAL VARIABLES GO HERE

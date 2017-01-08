@@ -13,6 +13,8 @@
 
 import Foundation
 
+//TODO: Move to Cloudant
+
 ///
 //MARK:- Persistent Model Classes - use NSCoding to read/write plists
 ///

@@ -51,12 +51,16 @@ struct Smaxx {
 
 }
 
-
+/// every server has one of these, with a distinct tokenCACHE
 struct IGOps {
     
     static var apiCount = 0
     
+    private static var tokenCache : [String:String] = [:]
     
+    static func setToken(_ token:String, id:String) {
+        tokenCache[token] = id
+    }
     static func discoverIpAddress(completion:@escaping (String)->()) {
         
         /// first get our ip address from: "https://api.ipify.org?format=json"
@@ -79,13 +83,16 @@ struct IGOps {
     
     
     private static func get_token_for_member(_ targetID:String) throws -> String  {
+        // test in token cache
         
-        if let token = MembersMainServer.m_getTokenFromID(id: targetID) {
-            return token
+        let tok = tokenCache[targetID]
+        guard tok != nil else {
+            throw  SMaxxError.noAccessTokenForUser(id: targetID)
         }
-        
-        throw  SMaxxError.noAccessTokenForUser(id: targetID)
+        return tok!
     }
+    
+    
     static func getUserstuff (_ targetID:String,
                               completion:@escaping (Int,OptDict)->())
         throws { //-> IGOps.Router  {
@@ -248,9 +255,9 @@ struct IGOps {
     
     fileprivate static   func paginatedCall(_ url:URL,
                                             each:@escaping (IGMediaBlock)->(),
-                                            completion:@escaping (Int)->()) throws {
-        
-        try  NetClientOps.nwGetJSON(url) { status, jsonObject in
+                                            completion:@escaping (Int)->())
+        throws {
+             try  NetClientOps.nwGetJSON(url) { status, jsonObject in
             apiCount += 1
             defer {
             }

@@ -29,28 +29,36 @@ Routes and Servers
 ==========
 
 There are 4 Logical Servers, each running on a different tcp/ip port. 
+
 There is no shared memory between any of them, so they can run in separate processes, and even on separate processors.
+
+## Reports routes called by clients:
+
+- get("/reports")
+- get("/reports/:id/:reportname")
+
+## Members routes called by clients:
+
+
+- get("/showlogin") - step one in instagram credentials
+- get("/unwindor") - when done
+
 
 ## HomePage Routes
 
 - get("/fp") -- front panel html homepage
 - get("/") -- a plain homepage
-
 - get("/log")
+- get("/status")
 
-- all("/_/", middleware: staticFileServer)
+
+## HomePage Routes used within SMXServer:
 
 - post("/postcallback") -- to and from ig
 - get("/postcallback")  -- to and from ig
+- all("/_/", middleware: staticFileServer)
 
-
-## Reports routes:
-
-- get("/reports")
-- get("/reports/:id/:reportname")
-
-
-## Members routes:
+## Members routes used within SMXServer:
 
 - get("/membership") -- full list
 - delete("/membership") - delete all
@@ -59,10 +67,11 @@ There is no shared memory between any of them, so they can run in separate proce
 - post("/membership")
 - get("/showlogin") - step one in instagram credentials
 - get("/authcallback") - from ig
-- get("/unwindor") - when done
+- get("/status")
 
 
-## Workers routes:
+## Workers routes used within SMXServer:
 
--  get("/workers/start/:id")
--  get("/workers/stop/:id")
+- get("/workers/start/:id")
+- get("/workers/stop/:id")
+- get("/status") - for ops only 

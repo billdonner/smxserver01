@@ -62,6 +62,7 @@ open class InstagramCredentials {
         })// closure
     }
     
+
     open func handle_post_callback (_ request: RouterRequest, response: RouterResponse) {
         /// parse out the callback we are getting back, its json
         var userid = "notfound"
@@ -76,7 +77,9 @@ open class InstagramCredentials {
         Log.info("---->>>>  post callback for user  \(userid)")
         // member must have access token for instagram api access
        MembersCache.getTokenFromID(id: userid) { token in
-            workersMainServer.make_worker_for(id: userid, token: token!)
+        self.rest_make_worker_for(id: userid, token: token!) {_ in 
+            print("rest make worker for \(userid) \(token!) ")
+        }
         }
     }
     
@@ -137,15 +140,14 @@ open class InstagramCredentials {
             paramString: "?client_id=\(clientId)&redirect_uri=\(cburl)&grant_type=authorization_code&client_secret=\(clientSecret)&code=\(code)")
             { status, body  in
                 if status == 200 ,
-                    let body = body ,
-                    let xyz =  self.processInstagramResponse (body: body) {
-                    let userid = xyz["id"] as! String
-                    let smtoken = xyz["smaxx-token"] as! String
-                    let token = xyz["access_token"] as! String
-                    let title = xyz["named"] as! String
-                    let pic  = xyz["pic"] as! String
+                    let body = body {
+                     self.processInstagramResponse (body: body) { xyz in
+                  if  let userid = xyz?["id"] as? String,
+                    let smtoken = xyz?["smaxx-token"] as? String,
+                    let token = xyz?["access_token"] as? String,
+                    let title = xyz?["named"] as? String,
+                    let pic  = xyz?["pic"] as? String {
                     
-                    workersMainServer?.make_worker_for(id:userid,token:token)
                     // w.start(userid,request,response)
                     // see if we can go somewhere interesting
                     
@@ -155,8 +157,10 @@ open class InstagramCredentials {
                         try response.redirect(tk)  }
                     catch {
                         Log.error("Could not redirect to \(tk)")
-                    } 
+                    }
+                        }
                     completion?(200)
+                    }
                 }//==200
                 else {
                     Log.error("Bad Status From Instagram   \(status)")
@@ -184,8 +188,49 @@ open class InstagramCredentials {
     open  func STEP_THREE (_ request: RouterRequest, response: RouterResponse) {
         //Log.error("STEP_THREE   \( request.queryParams)")
     }
-   private  func processInstagramResponse(body:Data)-> AnyObject?  {
-    var ret:AnyObject? = nil
+    
+    private func rest_rewrite_member_info(ble:AnyObject,completion:@escaping (Int)->())  {
+        NetClientOps.perform_post_request(schema:"https",
+                                          host:"api.ipify.org",port:443,
+                                          path:"?format=json",paramString: "")
+        { status,body  in
+            if status == 200 {
+                let jsonBody = JSON(data: body!)
+                if let _ = jsonBody["ip"].string {
+                    completion(200 )
+                }
+                else {
+                    fatalError("no ip address for this Kitura Server instance, status is \(status)")
+                }
+            }
+        }
+    }
+    
+   private func rest_make_worker_for(id: String, token: String,completion:@escaping (Int)->()) {
+        //TODO: make this a REST call to other server
+        //        workersMainServer?.make_worker_for(id:id,token:token)
+        //        completion()
+        
+        NetClientOps.perform_post_request(schema:"https",
+                                          host:"api.ipify.org",port:443,
+                                          path:"?format=json",paramString: "")
+        { status,body  in
+            if status == 200 {
+                let jsonBody = JSON(data: body!)
+                if let ip = jsonBody["ip"].string {
+                    completion(200 )
+                }
+                else {
+                    fatalError("no ip address for this Kitura Server instance, status is \(status)")
+                }
+            }
+            
+        }
+    }
+    
+    
+   private  func processInstagramResponse(body:Data,completion:@escaping (AnyObject?)->())   {
+    //var ret:AnyObject? = nil
         //var ret = ("","","","","")
         let jsonBody = JSON(data: body)
         if let token = jsonBody["access_token"].string,
@@ -198,13 +243,29 @@ open class InstagramCredentials {
                 let smtoken = "\((userid + token).hashValue)"
                 let nows = "\(NSDate())" // time now as string
             let   createds = nows
+            
+            IGOps.setToken(token, id: userid) // poke this in here
+            
+            
             let ble =  ["id":userid    ,  "created":createds   ,  "last-login":nows   ,
                                                                                 "named":title   ,
                                                                                 "pic":pic    ,
                                                                                 "access_token":token    ,
                                                                                 "smaxx-token":smtoken    ] as AnyObject
-        ret = MembersMainServer.rewriteMemberInfo(ble)
+           
+          rest_rewrite_member_info(ble: ble) { status in
+                if status == 200 {
+                    completion(ble)
+                }
+                
+            }
         }
-        return ret
     }
+}
+
+
+/// general rest calls between servers
+extension InstagramCredentials {
+
+
 }

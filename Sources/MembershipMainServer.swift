@@ -29,6 +29,42 @@ import Foundation
 /// get("/authcallback") - from ig
 /// get("/unwindor") - when done
 
+fileprivate class MembershipDB {
+    
+    
+    
+    ///
+    /// restore from keyed archive plist
+      class func restoreme(_ userID:String) throws ->   JSONDictionary {
+        let spec = membersMainServer.store.membershipPath() +  "\(userID).smaxx" //singleton instance
+        do {
+            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?    JSONDictionary {
+                return pdx
+            }
+            throw SMaxxError.cantDecodeMembership(message : spec )
+        }
+        catch  {
+            throw  SMaxxError.cantRestoreMembership(message: spec )
+        }
+    }
+    /// save as keyed archive plist
+    class func save (data:[String:AnyObject] ) throws {
+        let start = Date()
+        let spec = membersMainServer.store.membershipPath() +  "_MembersCachesmaxx" // singleton instance
+        if  !NSKeyedArchiver.archiveRootObject(["status":SMaxxResponseCode.success ,"data": data],
+                                               toFile:spec ){
+            throw SMaxxError.cantWriteMembership(message: spec )
+        } else {
+            let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
+            Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
+        }
+    }
+    
+    
+    
+    
+}
+
 
 /// This "SeparateServer" is started on its own port via the addHTTPServer Kitura api
 
@@ -139,7 +175,7 @@ class MembersMainServer : SeparateServer {
                 
                 /// save entire pile
                 
-                try  save ( )
+                try  MembershipDB.save (data: members )
                 //Log.info("saved membership state")
                 response.headers["Content-Type"] = "application/json; charset=utf-8"
                 try response.status(HTTPStatusCode.OK).send(JSON(["status":SMaxxResponseCode.success    ] as    JSONDictionary).description).end()
@@ -156,7 +192,7 @@ class MembersMainServer : SeparateServer {
             members[id] = nil
             
             
-            try   save ()
+            try   MembershipDB.save (data: members)
             
             let dict = ["status":SMaxxResponseCode.success    , "data":members  ] as JSONDictionary
             let jsonDict = JSON(dict )
@@ -192,7 +228,7 @@ class MembersMainServer : SeparateServer {
         do {
             members = [:]
             
-            try   save ( )
+            try   MembershipDB.save ( data: members)
             
             let dict = ["status":SMaxxResponseCode.success    , "data":[:]   ] as JSONDictionary
             let jsonDict = JSON(dict )
@@ -244,25 +280,11 @@ class MembersMainServer : SeparateServer {
             Log.error("Failed to send response \(error)")
         }
     }
-    
-    ///
-    /// restore from keyed archive plist
-    fileprivate class func restoreme(_ userID:String) throws ->   JSONDictionary {
-        let spec = membersMainServer.store.membershipPath() +  "\(userID).smaxx" //singleton instance
-        do {
-            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?    JSONDictionary {
-                return pdx
-            }
-            throw SMaxxError.cantDecodeMembership(message : spec )
-        }
-        catch  {
-            throw  SMaxxError.cantRestoreMembership(message: spec )
-        }
-    }
+
     /// Restore state of membership
     class func restoreMembership() {
         do {
-            let d  = try  restoreme("_membership")
+            let d  = try  MembershipDB.restoreme("_membership")
             if let mem  = d["data"] as? [String : AnyObject] {
                 members = mem
                 //Log.info("membership restored to: \(membership)")
@@ -273,20 +295,43 @@ class MembersMainServer : SeparateServer {
             Log.info ("-----could not restore membership")
         }
     }
-    /// save as keyed archive plist
-    class func save ( ) throws {         let start = Date()
-        let spec = membersMainServer.store.membershipPath() +  "_MembersCachesmaxx" // singleton instance
-        if  !NSKeyedArchiver.archiveRootObject(["status":SMaxxResponseCode.success ,"data": members],
-                                               toFile:spec ){
-            throw SMaxxError.cantWriteMembership(message: spec )
-        } else {
-            let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
-            Log.info("****************Saved Instagram Data to \(spec)  in \(elapsed), ****************")
-        }
-    }
     
+ 
+    
+    class func rewriteMemberInfo(_ ble:AnyObject,completion:( AnyObject?)->()) {
+        
+        var ret:AnyObject? = nil
+        if let userid = ble["id"] as? String {
+            do {
+                
+                let mu =   members[userid]
+                if mu != nil {
+                    // already there, just update last login time
+                    //                if let created = mu!["created"] as? String {
+                    //                    mu!["created"] = ble["created"] as? String
+                    //                    MembersMainServer.members[userid] = ble
+                    //                    // error
+                    //                    Log.error("Could not find created field in mu")
+                    //                }
+                } else {
+                    // not there make new
+                    members[userid] = ble
+                }
+                
+                ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
+                /// adjust membership table and save it to disk
+                /// save entire pile
+                try  MembershipDB.save (data: members )
+                //Log.info("saved membership state")
+                ret = ble // ( userid , "",ble["smaxx-token"],"","")// token, smtoken, title, pic )
+            }
+            catch  {
+                Log.error("Could not save membership")
+            }
+        }// has id
+        completion( ret )
+    }
 }
-
 extension Router {
     
     func setupRoutesForMembership( mainServer:MembersMainServer, smaxx:Smaxx) {
@@ -399,42 +444,7 @@ extension Router {
     
     
 }
-extension MembersMainServer {
-    
-    class func rewriteMemberInfo(_ ble:AnyObject) -> AnyObject? {
-        
-        var ret:AnyObject? = nil
-        if let userid = ble["id"] as? String {
-            do {
-                
-                let mu =  MembersMainServer.members[userid]
-                if mu != nil {
-                    // already there, just update last login time
-                    //                if let created = mu!["created"] as? String {
-                    //                    mu!["created"] = ble["created"] as? String
-                    //                    MembersMainServer.members[userid] = ble
-                    //                    // error
-                    //                    Log.error("Could not find created field in mu")
-                    //                }
-                } else {
-                    // not there make new
-                    MembersMainServer.members[userid] = ble
-                }
-                
-                ////////////// VERY INEFFICIENT , REWRITES ALL RECORDS ON ANY UPDATE ///////////////////
-                /// adjust membership table and save it to disk
-                /// save entire pile
-                try  MembersMainServer.save ( )
-                //Log.info("saved membership state")
-                ret = ble // ( userid , "",ble["smaxx-token"],"","")// token, smtoken, title, pic )
-            }
-            catch  {
-                Log.error("Could not save membership")
-            }
-        }// has id
-        return ret
-    }
-}
+
 
 ///
 // MARK:- Hack Login to Instagram

@@ -132,7 +132,7 @@
 		OBJ_353 /* ReportMakerPeopleReports.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_136 /* ReportMakerPeopleReports.swift */; };
 		OBJ_354 /* ReportMakerPostsReports.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_137 /* ReportMakerPostsReports.swift */; };
 		OBJ_355 /* ReportMakerTagReports.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_138 /* ReportMakerTagReports.swift */; };
-		OBJ_356 /* HomePageHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_139 /* HomePageHTML.swift */; };
+		OBJ_356 /* HomePageMainServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_139 /* HomePageMainServer.swift */; };
 		OBJ_357 /* SocialDataProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_140 /* SocialDataProcessor.swift */; };
 		OBJ_358 /* WorkersMainServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_141 /* WorkersMainServer.swift */; };
 		OBJ_360 /* LoggerAPI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = OBJ_144 /* LoggerAPI.framework */; };
@@ -362,7 +362,7 @@
 		OBJ_136 /* ReportMakerPeopleReports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerPeopleReports.swift; sourceTree = "<group>"; };
 		OBJ_137 /* ReportMakerPostsReports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerPostsReports.swift; sourceTree = "<group>"; };
 		OBJ_138 /* ReportMakerTagReports.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportMakerTagReports.swift; sourceTree = "<group>"; };
-		OBJ_139 /* HomePageHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePageHTML.swift; sourceTree = "<group>"; };
+		OBJ_139 /* HomePageMainServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePageMainServer.swift; sourceTree = "<group>"; };
 		OBJ_140 /* SocialDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialDataProcessor.swift; sourceTree = "<group>"; };
 		OBJ_141 /* WorkersMainServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkersMainServer.swift; sourceTree = "<group>"; };
 		OBJ_144 /* LoggerAPI.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = LoggerAPI.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -598,7 +598,7 @@
 			isa = PBXGroup;
 			children = (
 				OBJ_127 /* main.swift */,
-				OBJ_139 /* HomePageHTML.swift */,
+				OBJ_139 /* HomePageMainServer.swift */,
 				OBJ_118 /* IGDataEngine.swift */,
 				OBJ_119 /* IGDateSupport.swift */,
 				OBJ_120 /* IGJsonShim.swift */,
@@ -1274,7 +1274,7 @@
 				OBJ_354 /* ReportMakerPostsReports.swift in Sources */,
 				AD2ACFF31E19744700DCA12E /* MembersCache.swift in Sources */,
 				OBJ_355 /* ReportMakerTagReports.swift in Sources */,
-				OBJ_356 /* HomePageHTML.swift in Sources */,
+				OBJ_356 /* HomePageMainServer.swift in Sources */,
 				OBJ_357 /* SocialDataProcessor.swift in Sources */,
 				OBJ_358 /* WorkersMainServer.swift in Sources */,
 			);
