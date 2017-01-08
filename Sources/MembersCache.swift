@@ -22,23 +22,57 @@ import Foundation
 //// all varieties of server include these functions to access a remote Membership server in a highly performant manner
 
 
+var membersCache = MembersCache()
+
 open class MembersCache {
+    
+    
+    // local cache to hold arbitrary json blocks, not snapped to disk
+    
+    var localmembers :   [String:AnyObject] = [:] // not jsondictionary
+    
+    
     class func isMemberFromCache(_ id:String)->Bool {
-        return MembersMainServer.m_isMember(id)  // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
+        if let mem = localmembers[id] {
+            return true
+        }
+        
+        return false
+            
+           // MembersMainServer.m_isMember(id)  // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
         
     }
+    /// not called
     class func getTokenFromIDFromCache(id:String)-> String? {
-        let tok = MembersMainServer.m_getTokenFromID(id: id) // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
-        return( tok )
+        
+        if let mem = localmembers[id],
+            let token = mem["access_token"] {
+            return token // this is the token
+        }
+       // let tok = MembersMainServer.m_getTokenFromID(id: id) // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
+        return nil
     }
+    
+    /// only called by reportmaker
     class func getTokensFromIDFromCache(id:String)->(String?,String?){
-        let tok = MembersMainServer.m_getTokensFromID(id: id)
-        return (tok.0,tok.1)
+        if    let mem =  localmembers[id] {
+            let token = mem["access_token"] as? String
+            let stoken = mem["smaxx-token"] as? String
+            return (token,stoken)
+        }
+        return (nil,nil)
     }
+    
+    /// only called by reportmaker
     class func getMemberIDFromTokenFromCache(_ token:String)->String?  {
         let id = MembersMainServer.m_getMemberIDFromToken(token)
         return(id)
     }
+    
+    
+    
+    
+    
     class func isMember(_ id:String,completion:@escaping (Bool)->()) {
        let b =  MembersMainServer.m_isMember(id)
         completion( b )

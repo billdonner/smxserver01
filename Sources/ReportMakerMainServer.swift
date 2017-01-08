@@ -119,7 +119,7 @@ class ReportMakerMainServer : SeparateServer {
         }
     }
     
-    class  func reportMakeForID(_ id:String, _ token:String,_ request:RouterRequest , _ response:RouterResponse) {
+  private   class  func reportMakeForID(_ memberid:String, _ token:String,_ request:RouterRequest , _ response:RouterResponse) {
         do {
             response.headers["Content-Type"] = "application/json; charset=utf-8"
             // ensure its a valid report anme
@@ -129,7 +129,10 @@ class ReportMakerMainServer : SeparateServer {
                 return
             }
             //getMemberIDFromToken
-            let memberid = MembersCache.getMemberIDFromTokenFromCache(token)
+            //let memberid = MembersCache.getMemberIDFromTokenFromCache(token)
+            guard  let tokenid = MembersCache.getTokenFromIDFromCache(id: memberid), token == tokenid else {
+                
+            } 
             
                 if let memid = memberid {
                  let (mtoken,smtoken) =  MembersCache.getTokensFromIDFromCache(id:memid)
