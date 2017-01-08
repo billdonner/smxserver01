@@ -33,7 +33,7 @@ var homePageMainServer : HomePageMainServer!
 
 var allServers:[SeparateServer] = []
 
-
+var membersCache = MembersCache()  // each server has its own cache to avoid needing to go to membersMainServer each time
 
 /// globals re: remote communications with instagram
 let DataTaskGet = false  // set only on MAC OSX to use urlsessions

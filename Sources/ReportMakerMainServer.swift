@@ -130,12 +130,18 @@ class ReportMakerMainServer : SeparateServer {
             }
             //getMemberIDFromToken
             //let memberid = MembersCache.getMemberIDFromTokenFromCache(token)
-            guard  let tokenid = MembersCache.getTokenFromIDFromCache(id: memberid), token == tokenid else {
-                
+            guard   let (mtoken,smtoken) = MembersCache.getTokenFromIDFromCache(id: memberid) else {
+                let item = ["status":SMaxxResponseCode.noToken ] as JSONDictionary
+                    try? AppResponses.sendbadresponse(response,item)
+                return
             } 
-            
+                guard token == tokenid else {
+                    let item = ["status":SMaxxResponseCode.noToken ] as JSONDictionary
+                    try? AppResponses.sendbadresponse(response,item)
+                    return
+                    
+                }
                 if let memid = memberid {
-                 let (mtoken,smtoken) =  MembersCache.getTokensFromIDFromCache(id:memid)
             
                     // member must have access token for report generation
                     if let smtoken = smtoken,
@@ -218,12 +224,11 @@ fileprivate     class func reportsDict()->JSONDictionary {
 
 
 
-
 // MARK:- Read context for id and dispatch to specific report builders
 fileprivate  class func generate_and_send_report (_ id:String,token:String, reportname:String,limit:Int, skip:Int, bypasscache:Bool = false ) -> JSONDictionary {
     let firstmem: UInt = report_memory()
     let start = Date()
-    let path = membersMainServer.store.membershipPath() + id + ".smaxx"
+    let path =  pathForMemberArchive(id)
     var pdx: PersonData!
     if bypasscache == true {
         if let pdxxx = NSKeyedUnarchiver.unarchiveObject(withFile: path) as? PersonData {
@@ -260,8 +265,13 @@ fileprivate  class func generate_and_send_report (_ id:String,token:String, repo
             let restart = Date()
             sdp.figureLikesAndComments() // compute intermediates!
             
-            // print (sdp.pd.postsStatus())
+            /// where REPORT GETS GENERATED happens
             let (totalcount,body,_) = f(sdp,skip,limit)
+            ///
+            
+            
+            
+            
             
             ///
             // MARK:- The Report Name and Kind is Reflected Back To The Mobile App

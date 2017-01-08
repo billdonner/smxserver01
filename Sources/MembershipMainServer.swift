@@ -32,11 +32,28 @@ import Foundation
 fileprivate class MembershipDB {
     
     
+    class func pathForMemberArchive (memberid:String) ->String {
+        
+        return membersMainServer.store.membershipPath() + memberid + ".smaxx"
+    }
+    
+//    static func restore(_ userID:String) throws -> PersonData {
+//        let tail = "/\(userID).smaxx"
+//        do {
+//            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:membersMainServer.store.membershipPath() + tail)  as? PersonData {
+//                return pdx
+//            }
+//            throw SMaxxError.cantDecodeIGPersonDataFile(message : tail)
+//        }
+//        catch  {
+//            throw  SMaxxError.cantRestoreIGPersonDataFile (message: tail)
+//        }
+//    }
     
     ///
     /// restore from keyed archive plist
       class func restoreme(_ userID:String) throws ->   JSONDictionary {
-        let spec = membersMainServer.store.membershipPath() +  "\(userID).smaxx" //singleton instance
+        let spec = MembershipDB.pathForMemberArchive(memberid: userid)//singleton instance
         do {
             if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:spec)  as?    JSONDictionary {
                 return pdx
@@ -100,7 +117,7 @@ class MembersMainServer : SeparateServer {
         self.smaxx = smaxx
     }
     
-    static var members :   [String:AnyObject] = [:] // not jsondictionary
+    static var persisted_members :   [String:AnyObject] = [:] // not jsondictionary
     
     func mainPort() -> Int16 {
         return self.port
@@ -110,44 +127,44 @@ class MembersMainServer : SeparateServer {
     }
     //    }
     
-    class func m_isMember(_ id:String) -> Bool {
-        
-        //from all over
-        if let _ =  members[id] {
-            return true
-        }
-        return false
-    }
+//    class func m_isMember(_ id:String) -> Bool {
+//        
+//        //from all over
+//        if let _ =  members[id] {
+//            return true
+//        }
+//        return false
+//    }
     //from all over
-    class func m_getTokenFromID(id:String) -> String? {
-        //from all over
-        
-        // member must have access token for instagram api access
-        if  let mem =  members[id],
-            let token = mem["access_token"] as? String {
-            return token
-        }
-        return nil
-    }
-    class func m_getTokensFromID(id:String) -> (String?,String?) { // from reportmaker
-        // member must have access token for instagram api access
-        if    let mem =  members[id]{
-            let token = mem["access_token"] as? String
-            let stoken = mem["smaxx-token"] as? String
-            return (token,stoken)
-        }
-        return( nil,nil)
-    }
+//    class func m_getTokenFromID(id:String) -> String? {
+//        //from all over
+//        
+//        // member must have access token for instagram api access
+//        if  let mem =  members[id],
+//            let token = mem["access_token"] as? String {
+//            return token
+//        }
+//        return nil
+//    }
+//    class func m_getTokensFromID(id:String) -> (String?,String?) { // from reportmaker
+//        // member must have access token for instagram api access
+//        if    let mem =  members[id]{
+//            let token = mem["access_token"] as? String
+//            let stoken = mem["smaxx-token"] as? String
+//            return (token,stoken)
+//        }
+//        return( nil,nil)
+//    }
     //mem[  "smaxx-token"]
-    class func m_getMemberIDFromToken(_ token:String) -> String? {// from reportmaker
-        
-        for (_,member) in members {
-            if member["smaxx-token"] as! String  == token {
-                return member["id"] as? String
-            }
-        }
-        return nil
-    }
+//    class func m_getMemberIDFromToken(_ token:String) -> String? {// from reportmaker
+//        
+//        for (_,member) in members {
+//            if member["smaxx-token"] as! String  == token {
+//                return member["id"] as? String
+//            }
+//        }
+//        return nil
+//    }
     
     //// remote calls
     

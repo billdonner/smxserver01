@@ -25,12 +25,26 @@ When a new user is identified with the service, the "membership" service sets up
 The normal client behavior is simply to authenticate and then request reports via the rest interface
 
 
+
+
 Routes and Servers
 ==========
 
 There are 4 Logical Servers, each running on a different tcp/ip port. 
 
 There is no shared memory between any of them, so they can run in separate processes, and even on separate processors.
+
+
+Data Stores
+===========
+
+There is a persistent database for Members that is behind the Membership Web Service on port xxxx
+- Cloudant
+
+There is a persistent database for Workers that is behind the Workers Web Service on port yyyy
+- MySQL or similar
+
+There is a reports cache maintained in Memory for the Reports Service on port zzzz 
 
 ## Reports routes called by clients:
 

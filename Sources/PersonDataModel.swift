@@ -139,27 +139,16 @@ class PersonData:NSObject,NSCoding  //TODO: rename to SocialPersonData
         if ouVersion == nil {
             ouVersion = plistVersion
         }
-        let tail = "/\(userID).smaxx"
-        if  !NSKeyedArchiver.archiveRootObject(self, toFile:membersMainServer.store.membershipPath() + tail){
-            throw SMaxxError.cantWriteIGPersonDataFile(message: tail)
+        let spec = MembershipDB.pathForMemberArchive(memberid: userid)//singleton instance
+
+        if  !NSKeyedArchiver.archiveRootObject(self, toFile:spec){
+            throw SMaxxError.cantWriteIGPersonDataFile(message: spec)
         } else {
             let elapsed  =   "\(Int(Date().timeIntervalSince(start)*1000.0))ms"
-            print("  **************** Saved Person Data to ", tail, " in ",elapsed,
+            print("  **************** Saved Person Data to ", spec, " in ",elapsed,
                   " ****************")
         }
     }
-    
-    static func restore(_ userID:String) throws -> PersonData {
-        let tail = "/\(userID).smaxx"
-        do {
-            if let pdx = NSKeyedUnarchiver.unarchiveObject(withFile:membersMainServer.store.membershipPath() + tail)  as? PersonData {
-                return pdx
-            }
-            throw SMaxxError.cantDecodeIGPersonDataFile(message : tail)
-        }
-        catch  {
-            throw  SMaxxError.cantRestoreIGPersonDataFile (message: tail)
-        }
-    }
+
 }
 

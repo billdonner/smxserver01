@@ -22,8 +22,6 @@ import Foundation
 //// all varieties of server include these functions to access a remote Membership server in a highly performant manner
 
 
-var membersCache = MembersCache()
-
 open class MembersCache {
     
     
@@ -38,57 +36,48 @@ open class MembersCache {
         }
         
         return false
-            
-           // MembersMainServer.m_isMember(id)  // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
+    }
+ 
+ 
+    /// remote call to membership server for member info, tokens, etc, only called internally
+    
+    private class func isMember_Remote(_ id:String,completion:@escaping (JsonDictionary)->()) {
         
-    }
-    /// not called
-    class func getTokenFromIDFromCache(id:String)-> String? {
-        
-        if let mem = localmembers[id],
-            let token = mem["access_token"] {
-            return token // this is the token
+        /// buld http get to return all in an id block
+        let ret = [:]
+        completion(ret)
         }
-       // let tok = MembersMainServer.m_getTokenFromID(id: id) // DOES NOT PLACE REMOTE CALL, JUST RETURNS CACHED VALUE, IF ANY
-        return nil
-    }
+
     
-    /// only called by reportmaker
-    class func getTokensFromIDFromCache(id:String)->(String?,String?){
-        if    let mem =  localmembers[id] {
-            let token = mem["access_token"] as? String
-            let stoken = mem["smaxx-token"] as? String
-            return (token,stoken)
-        }
-        return (nil,nil)
-    }
-    
-    /// only called by reportmaker
-    class func getMemberIDFromTokenFromCache(_ token:String)->String?  {
-        let id = MembersMainServer.m_getMemberIDFromToken(token)
-        return(id)
-    }
-    
-    
-    
-    
+  /// coming to here means try the cache and if not found, do the full call
     
     class func isMember(_ id:String,completion:@escaping (Bool)->()) {
-       let b =  MembersMainServer.m_isMember(id)
-        completion( b )
+        if let mem = localmembers[id] {
+            completion(true)
+            return
+        }
+        //nothing, so get details via a remote webservice call to the assigned members server
+        
+        isMember_Remote(id,completion:completion)
+    }
+
     
+    private class func getTokensFromID_Remote(id:String, completion: @escaping ((String?,String?) ->())){
+        
+        /// buld http get to return all in an id block
+
+        let ret = (nil, nil)
+        completion (ret.0,ret.1)
     }
-    class func getTokenFromID(id:String,completion: @escaping(String?)->()) {
-        let tok = MembersMainServer.m_getTokenFromID(id: id)
-        completion( tok )
+    
+     class func getTokensFromID(id:String, completion: @escaping ((String?,String?) ->())){
+        if let tok = localmembers[id] {
+            completion (tok.0,tok.1)
+            return
+        }
+        
+        completion (nil, nil)
     }
-    class func getTokensFromID(id:String, completion: @escaping ((String?,String?) ->())){
-        let tok = MembersMainServer.m_getTokensFromID(id: id)
-        completion (tok.0,tok.1)
-    }
-    class func getMemberIDFromToken(_ token:String, completion:@escaping ((String?) -> ())) {
-        completion(nil)
-        let id = MembersMainServer.m_getMemberIDFromToken(token)
-        completion(id)
-    }
+    
+    
 }
